@@ -1,0 +1,978 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "theme": "Basic Words",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "DIE",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "SET",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "EIS",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "DOSE",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "D",
+        "E",
+        "I",
+        "K",
+        "N",
+        "O",
+        "P",
+        "R",
+        "S",
+        "T"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 2,
+      "theme": "Simple Words",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "SEE",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "TEE",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "EIS",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "C",
+        "D",
+        "E",
+        "I",
+        "M",
+        "S",
+        "T",
+        "X",
+        "Z"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 3,
+      "theme": "Common 4-letter",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "HAUS",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "AUTO",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "SOHN",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "TOUR",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "B",
+        "H",
+        "N",
+        "O",
+        "R",
+        "S",
+        "T",
+        "U",
+        "Z"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 4,
+      "theme": "Family",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "MANN",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "NAME",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "MAMA",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "E",
+        "G",
+        "H",
+        "K",
+        "M",
+        "N",
+        "Q",
+        "W",
+        "X"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 5,
+      "theme": "Words with R",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "HERR",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "BERG",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "GROSS",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            },
+            {
+              "row": 2,
+              "col": 4
+            }
+          ]
+        },
+        {
+          "word": "BROT",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "B",
+        "E",
+        "G",
+        "H",
+        "K",
+        "M",
+        "O",
+        "R",
+        "S",
+        "T"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 6,
+      "theme": "Colors",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "BLAU",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "GELB",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "HELL",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "B",
+        "E",
+        "G",
+        "H",
+        "I",
+        "L",
+        "U",
+        "Z",
+        "Ä"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 7,
+      "theme": "Actions",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "GEHEN",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            },
+            {
+              "row": 0,
+              "col": 4
+            }
+          ]
+        },
+        {
+          "word": "SEHEN",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            },
+            {
+              "row": 1,
+              "col": 4
+            }
+          ]
+        },
+        {
+          "word": "LEBEN",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            },
+            {
+              "row": 2,
+              "col": 4
+            }
+          ]
+        },
+        {
+          "word": "NEHMEN",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            },
+            {
+              "row": 3,
+              "col": 4
+            },
+            {
+              "row": 3,
+              "col": 5
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "B",
+        "D",
+        "E",
+        "G",
+        "H",
+        "L",
+        "M",
+        "N",
+        "S",
+        "T"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 8,
+      "theme": "Transport",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "ZUG",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "WEG",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            }
+          ]
+        },
+        {
+          "word": "TAG",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "E",
+        "G",
+        "P",
+        "R",
+        "T",
+        "U",
+        "W",
+        "X",
+        "Z"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 9,
+      "theme": "Body",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "HAND",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "LAND",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "BAND",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "WAND",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "A",
+        "B",
+        "D",
+        "G",
+        "H",
+        "J",
+        "L",
+        "N",
+        "P",
+        "W"
+      ],
+      "intersections": []
+    },
+    {
+      "level": 10,
+      "theme": "Numbers",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "EINS",
+          "positions": [
+            {
+              "row": 0,
+              "col": 0
+            },
+            {
+              "row": 0,
+              "col": 1
+            },
+            {
+              "row": 0,
+              "col": 2
+            },
+            {
+              "row": 0,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "ZWEI",
+          "positions": [
+            {
+              "row": 1,
+              "col": 0
+            },
+            {
+              "row": 1,
+              "col": 1
+            },
+            {
+              "row": 1,
+              "col": 2
+            },
+            {
+              "row": 1,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "DREI",
+          "positions": [
+            {
+              "row": 2,
+              "col": 0
+            },
+            {
+              "row": 2,
+              "col": 1
+            },
+            {
+              "row": 2,
+              "col": 2
+            },
+            {
+              "row": 2,
+              "col": 3
+            }
+          ]
+        },
+        {
+          "word": "VIER",
+          "positions": [
+            {
+              "row": 3,
+              "col": 0
+            },
+            {
+              "row": 3,
+              "col": 1
+            },
+            {
+              "row": 3,
+              "col": 2
+            },
+            {
+              "row": 3,
+              "col": 3
+            }
+          ]
+        }
+      ],
+      "letters": [
+        "C",
+        "D",
+        "E",
+        "I",
+        "N",
+        "R",
+        "S",
+        "V",
+        "W",
+        "Z"
+      ],
+      "intersections": []
+    }
+  ]
+}

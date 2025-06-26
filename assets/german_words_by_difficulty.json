@@ -1,0 +1,883 @@
+{
+  "easy": [
+    {
+      "word": "DER",
+      "frequency": 99,
+      "length": 3
+    },
+    {
+      "word": "DIE",
+      "frequency": 99,
+      "length": 3
+    },
+    {
+      "word": "DAS",
+      "frequency": 99,
+      "length": 3
+    },
+    {
+      "word": "UND",
+      "frequency": 99,
+      "length": 3
+    },
+    {
+      "word": "TAG",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "EIS",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "TEE",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "TÜR",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "BAD",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "WEG",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "SEE",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "BAR",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "BUS",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "ZUG",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "MAI",
+      "frequency": 97,
+      "length": 3
+    },
+    {
+      "word": "MIT",
+      "frequency": 96,
+      "length": 3
+    },
+    {
+      "word": "HAUS",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "AUTO",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BUCH",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "ZEIT",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "JAHR",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "MANN",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "FRAU",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "KIND",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "SOHN",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "ARZT",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "KOCH",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "CHEF",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BROT",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "KÄSE",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "OBST",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "REIS",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BIER",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "WEIN",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "SAFT",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "SALZ",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "MEHL",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BETT",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "WAND",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BÜRO",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "PARK",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "WALD",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BERG",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "MEER",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "DORF",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "LAND",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "KINO",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "CAFÉ",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "BANK",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "POST",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "TAXI",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "FOTO",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "FILM",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "LIED",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "TANZ",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "WIND",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "MÄRZ",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "JUNI",
+      "frequency": 96,
+      "length": 4
+    },
+    {
+      "word": "JULI",
+      "frequency": 96,
+      "length": 4
+    }
+  ],
+  "medium": [
+    {
+      "word": "HABEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "GEHEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SEHEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HÖREN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "LESEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "ESSEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "GEBEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HOLEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "NACHT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "MONAT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "WOCHE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "JUNGE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "VATER",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "AUTOR",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "MALER",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "MILCH",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "APFEL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SUPPE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SALAT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "FISCH",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "LACHS",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "TISCH",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "STUHL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "REGAL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "LAMPE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "DECKE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "BODEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "KÜCHE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "PLATZ",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "FLUSS",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "INSEL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "STADT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "STAAT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HOTEL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "LADEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "MARKT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HAFEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HANDY",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "RADIO",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "VIDEO",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "MUSIK",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SPIEL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SPORT",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "SONNE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "REGEN",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "WOLKE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "BLITZ",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "STURM",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "NEBEL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HITZE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "KÄLTE",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "APRIL",
+      "frequency": 95,
+      "length": 5
+    },
+    {
+      "word": "HEUTE",
+      "frequency": 95,
+      "length": 5
+    }
+  ],
+  "hard": [
+    {
+      "word": "KÖNNEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MÜSSEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SOLLEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WOLLEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "DÜRFEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MACHEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "KOMMEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LERNEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LEHREN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "STEHEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SITZEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LIEGEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LAUFEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "FAHREN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "TANZEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SINGEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LACHEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WEINEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "DENKEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WISSEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "HELFEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "NEHMEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "KAUFEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "FINDEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SUCHEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "ÖFFNEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "STUNDE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MINUTE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MUTTER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "BRUDER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "FREUND",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "LEHRER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "ANWALT",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "BÄCKER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SÄNGER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WASSER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "GEMÜSE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "BANANE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "ORANGE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "TOMATE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "NUDELN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "KUCHEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "KAFFEE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "ZUCKER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "BUTTER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "HUMMER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "TREPPE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "ZIMMER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "GARTEN",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SCHULE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MUSEUM",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "KAMERA",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "TENNIS",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WETTER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SCHNEE",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "DONNER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "SOMMER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "HERBST",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "WINTER",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "JANUAR",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "AUGUST",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MONTAG",
+      "frequency": 94,
+      "length": 6
+    },
+    {
+      "word": "MORGEN",
+      "frequency": 94,
+      "length": 6
+    }
+  ]
+}
