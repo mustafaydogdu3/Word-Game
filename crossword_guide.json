@@ -1,0 +1,119 @@
+{
+    "level": 1,
+    "theme": "Basic Words",
+    "gridSize": {
+        "rows": 5,
+        "cols": 5
+    },
+    "words": [
+        {
+            "word": "DOSE",
+            "positions": [
+                {
+                    "row": 0,
+                    "col": 0
+                },
+                {
+                    "row": 0,
+                    "col": 1
+                },
+                {
+                    "row": 0,
+                    "col": 2
+                },
+                {
+                    "row": 0,
+                    "col": 3
+                }
+            ]
+        },
+        {
+            "word": "DIE",
+            "positions": [
+                {
+                    "row": 0,
+                    "col": 0
+                },
+                {
+                    "row": 1,
+                    "col": 0
+                },
+                {
+                    "row": 2,
+                    "col": 0
+                }
+            ]
+        },
+        {
+            "word": "EIS",
+            "positions": [
+                {
+                    "row": 2,
+                    "col": 0
+                },
+                {
+                    "row": 2,
+                    "col": 1
+                },
+                {
+                    "row": 2,
+                    "col": 2
+                }
+            ]
+        },
+        {
+            "word": "SET",
+            "positions": [
+                {
+                    "row": 2,
+                    "col": 2
+                },
+                {
+                    "row": 3,
+                    "col": 2
+                },
+                {
+                    "row": 4,
+                    "col": 2
+                }
+            ]
+        }
+    ],
+    "letters": [
+        "D",
+        "E",
+        "I",
+        "O",
+        "S",
+        "T"
+    ],
+    "intersections": [
+        {
+            "words": [
+                "DOSE",
+                "DIE"
+            ],
+            "commonLetter": "D",
+            "positionInFirst": 0,
+            "positionInSecond": 0
+        },
+        {
+            "words": [
+                "DIE",
+                "EIS"
+            ],
+            "commonLetter": "E",
+            "positionInFirst": 2,
+            "positionInSecond": 0
+        },
+        {
+            "words": [
+                "EIS",
+                "SET"
+            ],
+            "commonLetter": "S",
+            "positionInFirst": 2,
+            "positionInSecond": 0
+        }
+    ]
+}

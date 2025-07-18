@@ -16,14 +16,97 @@ class WordPosition {
 
 class Intersection {
   final List<String> words;
-  final WordPosition position;
+  final String commonLetter;
+  final int positionInFirst;
+  final int positionInSecond;
 
-  Intersection({required this.words, required this.position});
+  Intersection({
+    required this.words,
+    required this.commonLetter,
+    required this.positionInFirst,
+    required this.positionInSecond,
+  });
 
   factory Intersection.fromJson(Map<String, dynamic> json) {
     return Intersection(
       words: List<String>.from(json['words']),
-      position: WordPosition.fromJson(json['position']),
+      commonLetter: json['commonLetter'],
+      positionInFirst: json['positionInFirst'],
+      positionInSecond: json['positionInSecond'],
+    );
+  }
+}
+
+// New data structures for word_game_lv.json format
+class LVWord {
+  final String word;
+  final List<List<int>> positions; // [row, col] format
+
+  LVWord({required this.word, required this.positions});
+
+  factory LVWord.fromJson(Map<String, dynamic> json) {
+    return LVWord(
+      word: json['word'],
+      positions: (json['positions'] as List)
+          .map((pos) => List<int>.from(pos))
+          .toList(),
+    );
+  }
+}
+
+class LVIntersection {
+  final String word1;
+  final int index1;
+  final String word2;
+  final int index2;
+
+  LVIntersection({
+    required this.word1,
+    required this.index1,
+    required this.word2,
+    required this.index2,
+  });
+
+  factory LVIntersection.fromJson(Map<String, dynamic> json) {
+    return LVIntersection(
+      word1: json['word1'],
+      index1: json['index1'],
+      word2: json['word2'],
+      index2: json['index2'],
+    );
+  }
+}
+
+class LVLevel {
+  final int level;
+  final String theme;
+  final int wordCount;
+  final List<int> gridSize;
+  final List<String> letters;
+  final List<LVWord> words;
+  final List<LVIntersection> intersections;
+
+  LVLevel({
+    required this.level,
+    required this.theme,
+    required this.wordCount,
+    required this.gridSize,
+    required this.letters,
+    required this.words,
+    required this.intersections,
+  });
+
+  factory LVLevel.fromJson(Map<String, dynamic> json) {
+    return LVLevel(
+      level: json['level'],
+      theme: json['theme'],
+      wordCount: json['word_count'],
+      gridSize: List<int>.from(json['gridSize']),
+      letters: List<String>.from(json['letters']),
+      words: (json['words'] as List).map((w) => LVWord.fromJson(w)).toList(),
+      intersections: (json['intersections'] as List)
+          .map((i) => LVIntersection.fromJson(i))
+          .toList(),
     );
   }
 }
@@ -42,10 +125,11 @@ class GermanWord {
   });
 
   factory GermanWord.fromJson(Map<String, dynamic> json) {
+    String word = json['word'];
     return GermanWord(
-      word: json['word'],
-      frequency: json['frequency'],
-      length: json['length'],
+      word: word,
+      frequency: json['frequency'] ?? 100, // Default frequency
+      length: json['length'] ?? word.length, // Use actual word length
       positions: json['positions'] != null
           ? (json['positions'] as List)
                 .map((p) => WordPosition.fromJson(p))
@@ -90,14 +174,17 @@ class Level {
 class WordService {
   static List<GermanWord> _words = [];
   static List<Level> _levels = [];
+  static List<LVLevel> _lvLevels = [];
   static bool _isLoaded = false;
+  static bool _isLVLoaded = false;
 
   static Future<void> loadWords() async {
     if (_isLoaded) return;
 
     try {
+      // Load all levels (1-10) from the new German levels file
       final String response = await rootBundle.loadString(
-        'assets/german_words.json',
+        'assets/json/levels_final_de_1_to_10.json',
       );
       final Map<String, dynamic> data = json.decode(response);
       final List<dynamic> levelsJson = data['levels'];
@@ -110,6 +197,31 @@ class WordService {
       _isLoaded = true;
     } catch (e) {
       print('Error loading words: $e');
+    }
+  }
+
+  static Future<void> loadLVWords() async {
+    if (_isLVLoaded) return;
+
+    try {
+      print('Loading LV words...');
+      // Load word_game_lv.json file
+      final String response = await rootBundle.loadString(
+        'assets/json/word_game_lv.json',
+      );
+      print('LV JSON loaded, length: ${response.length}');
+
+      final List<dynamic> levelsJson = json.decode(response);
+      print('LV JSON decoded, levels count: ${levelsJson.length}');
+
+      _lvLevels = levelsJson.map((json) => LVLevel.fromJson(json)).toList();
+      print('LV levels parsed: ${_lvLevels.length}');
+
+      _isLVLoaded = true;
+      print('LV words loaded successfully');
+    } catch (e) {
+      print('Error loading LV words: $e');
+      print('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -126,7 +238,23 @@ class WordService {
     return _levels[levelNumber - 1];
   }
 
+  static LVLevel? getLVLevelData(int levelNumber) {
+    print(
+      'getLVLevelData called for level $levelNumber, total LV levels: ${_lvLevels.length}',
+    );
+    if (levelNumber <= 0 || levelNumber > _lvLevels.length) {
+      print('Level $levelNumber out of range (1-${_lvLevels.length})');
+      return null;
+    }
+    final level = _lvLevels[levelNumber - 1];
+    print(
+      'Found LV level: ${level.theme}, letters: ${level.letters}, words: ${level.words.map((w) => w.word).toList()}',
+    );
+    return level;
+  }
+
   static int get totalLevels => _levels.length;
+  static int get totalLVLevels => _lvLevels.length;
 
   static List<String> findWordsFromLetters(List<String> availableLetters) {
     List<String> foundWords = [];
@@ -187,6 +315,54 @@ class WordService {
       wordPositions: wordPositions,
       intersections: level.intersections,
     );
+  }
+
+  static GamePuzzle generatePuzzleForLVLevel(int levelNumber) {
+    print('Generating LV puzzle for level $levelNumber');
+    LVLevel? level = getLVLevelData(levelNumber);
+    if (level == null) {
+      print('LV level $levelNumber not found, falling back to random puzzle');
+      // Fallback to random puzzle
+      return generatePuzzle(difficulty: 1);
+    }
+
+    print('LV level found: ${level.theme}, words: ${level.words.length}');
+    // Extract word strings from LVWord objects
+    List<String> targetWords = level.words.map((w) => w.word).toList();
+    print('Target words: $targetWords');
+
+    // Convert LV positions to WordPosition format
+    Map<String, List<WordPosition>> wordPositions = {};
+    for (LVWord word in level.words) {
+      wordPositions[word.word] = word.positions
+          .map((pos) => WordPosition(row: pos[0], col: pos[1]))
+          .toList();
+    }
+    print('Word positions converted for ${wordPositions.length} words');
+
+    // Convert LV intersections to Intersection format
+    List<Intersection> intersections = level.intersections.map((lvInt) {
+      return Intersection(
+        words: [lvInt.word1, lvInt.word2],
+        commonLetter: level.letters.first, // This might need adjustment
+        positionInFirst: lvInt.index1,
+        positionInSecond: lvInt.index2,
+      );
+    }).toList();
+    print('Intersections converted: ${intersections.length}');
+
+    final puzzle = GamePuzzle(
+      letters: List.from(level.letters)..shuffle(),
+      targetWords: targetWords,
+      level: levelNumber,
+      theme: level.theme,
+      wordPositions: wordPositions,
+      intersections: intersections,
+      gridSize: level.gridSize,
+    );
+
+    print('LV puzzle generated successfully with grid size: ${level.gridSize}');
+    return puzzle;
   }
 
   static GamePuzzle generatePuzzle({int difficulty = 1}) {
@@ -277,6 +453,7 @@ class WordService {
 
   static List<GermanWord> get allWords => _words;
   static List<Level> get allLevels => _levels;
+  static List<LVLevel> get allLVLevels => _lvLevels;
 }
 
 class GamePuzzle {
@@ -286,6 +463,7 @@ class GamePuzzle {
   final String theme;
   final Map<String, List<WordPosition>> wordPositions;
   final List<Intersection> intersections;
+  final List<int>? gridSize; // New field for LV levels
 
   GamePuzzle({
     required this.letters,
@@ -294,5 +472,6 @@ class GamePuzzle {
     required this.theme,
     this.wordPositions = const {},
     this.intersections = const [],
+    this.gridSize,
   });
 }

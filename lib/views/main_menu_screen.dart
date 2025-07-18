@@ -41,6 +41,97 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     await prefs.setString('world_name', worldName);
   }
 
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Ayarlar'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.refresh),
+                title: const Text('İlerlemeyi Sıfırla'),
+                subtitle: const Text('Tüm seviyeleri baştan başla'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _resetProgress();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('Hakkında'),
+                subtitle: const Text('Almanca Kelime Oyunu v1.0'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Kapat'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _resetProgress() async {
+    // Show confirmation dialog
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('İlerlemeyi Sıfırla?'),
+          content: const Text(
+            'Tüm ilerleme kaybedilecek ve Level 1\'den başlayacaksınız. Emin misiniz?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Sıfırla'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear(); // Clear all saved progress
+
+      // Reset local state
+      setState(() {
+        currentLevel = 1;
+        currentWorld = 1;
+        worldName = "YOLCULUK 1";
+      });
+
+      // Reset game view model
+      final viewModel = Provider.of<GameViewModel>(context, listen: false);
+      await viewModel.resetProgress();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'İlerleme başarıyla sıfırlandı! Level 1\'den başlayabilirsiniz.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,17 +176,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.settings,
-                        color: Colors.white,
-                        size: 28,
+                    GestureDetector(
+                      onTap: () => _showSettingsDialog(),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                     ),
                   ],

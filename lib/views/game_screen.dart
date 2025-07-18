@@ -175,6 +175,7 @@ class _GameScreenState extends State<GameScreen> {
         .map((i) => letters[i])
         .join();
     final grid = viewModel.game.grid;
+    final gridSize = viewModel.game.gridSize;
 
     return Scaffold(
       body: Stack(
@@ -233,6 +234,26 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   Row(
                     children: [
+                      // Mode indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          viewModel.modeInfo,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Level indicator
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -278,7 +299,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
-          // Puzzle grid
+          // Puzzle grid - now supports dynamic sizes
           Align(
             alignment: Alignment.topCenter,
             child: Padding(
@@ -295,7 +316,10 @@ class _GameScreenState extends State<GameScreen> {
                       final cell = cellEntry.value;
 
                       if (cell == null)
-                        return const SizedBox(width: 62, height: 62);
+                        return SizedBox(
+                          width: gridSize <= 4 ? 70 : 62,
+                          height: gridSize <= 4 ? 70 : 62,
+                        );
 
                       // Find which letter should be displayed at this position
                       String? displayLetter;
@@ -321,8 +345,8 @@ class _GameScreenState extends State<GameScreen> {
 
                       return Container(
                         margin: const EdgeInsets.all(4),
-                        width: 54,
-                        height: 54,
+                        width: gridSize <= 4 ? 62 : 54,
+                        height: gridSize <= 4 ? 62 : 54,
                         decoration: BoxDecoration(
                           color: isPartOfFoundWord
                               ? Colors.green.withOpacity(0.8)
@@ -343,7 +367,7 @@ class _GameScreenState extends State<GameScreen> {
                               color: isPartOfFoundWord
                                   ? Colors.white
                                   : Colors.black87,
-                              fontSize: 20,
+                              fontSize: gridSize <= 4 ? 24 : 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -601,10 +625,13 @@ class _GameScreenState extends State<GameScreen> {
         ),
       );
     }
+
     return widgets;
   }
 
   void _showSettingsDialog(BuildContext context) {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -613,7 +640,7 @@ class _GameScreenState extends State<GameScreen> {
           backgroundColor: Colors.transparent,
           child: Container(
             width: 320,
-            height: 400,
+            height: 450, // Increased height for mode switching
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -676,11 +703,53 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'BÖLÜM 6',
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                      Text(
+                        '${viewModel.modeInfo.toUpperCase()} - BÖLÜM ${viewModel.game.currentLevel}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
                       ),
                       const SizedBox(height: 40),
+                      // Mode switching buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildSettingsButton(
+                            icon: Icons.language,
+                            label: 'ALMANCA',
+                            iconColor: viewModel.currentMode == GameMode.german
+                                ? const Color(0xFF4c51bf)
+                                : Colors.white,
+                            backgroundColor:
+                                viewModel.currentMode == GameMode.german
+                                ? Colors.white
+                                : Colors.white24,
+                            onTap: () async {
+                              await SoundService.playButtonClick();
+                              await viewModel.switchMode(GameMode.german);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          _buildSettingsButton(
+                            icon: Icons.abc,
+                            label: 'LV',
+                            iconColor: viewModel.currentMode == GameMode.lv
+                                ? const Color(0xFF4c51bf)
+                                : Colors.white,
+                            backgroundColor:
+                                viewModel.currentMode == GameMode.lv
+                                ? Colors.white
+                                : Colors.white24,
+                            onTap: () async {
+                              await SoundService.playButtonClick();
+                              await viewModel.switchMode(GameMode.lv);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
                       // Settings buttons row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -723,7 +792,7 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 30),
                       // Help section
                       Row(
                         children: [

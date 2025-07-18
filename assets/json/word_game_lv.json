@@ -1,0 +1,1202 @@
+[
+  {
+    "level": 1,
+    "theme": "Basic Words",
+    "word_count": 2,
+    "gridSize": [
+      3,
+      3
+    ],
+    "letters": [
+      "A",
+      "C",
+      "T"
+    ],
+    "words": [
+      {
+        "word": "ACT",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "CAT",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "ACT",
+        "index1": 1,
+        "word2": "CAT",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 2,
+    "theme": "Reversible Words",
+    "word_count": 3,
+    "gridSize": [
+      3,
+      3
+    ],
+    "letters": [
+      "N",
+      "O",
+      "W"
+    ],
+    "words": [
+      {
+        "word": "NOW",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "OWN",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "word": "WON",
+        "positions": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "NOW",
+        "index1": 1,
+        "word2": "OWN",
+        "index2": 0
+      },
+      {
+        "word1": "NOW",
+        "index1": 2,
+        "word2": "WON",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 3,
+    "theme": "Circular Patterns",
+    "word_count": 3,
+    "gridSize": [
+      3,
+      3
+    ],
+    "letters": [
+      "O",
+      "P",
+      "T"
+    ],
+    "words": [
+      {
+        "word": "OPT",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "TOP",
+        "positions": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "POT",
+        "positions": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "OPT",
+        "index1": 2,
+        "word2": "TOP",
+        "index2": 0
+      },
+      {
+        "word1": "TOP",
+        "index1": 2,
+        "word2": "POT",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 4,
+    "theme": "Easy Sayings",
+    "word_count": 4,
+    "gridSize": [
+      4,
+      4
+    ],
+    "letters": [
+      "A",
+      "E",
+      "S",
+      "Y"
+    ],
+    "words": [
+      {
+        "word": "EASY",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "SAY",
+        "positions": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "SEA",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "YES",
+        "positions": [
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            0
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "EASY",
+        "index1": 2,
+        "word2": "SAY",
+        "index2": 0
+      },
+      {
+        "word1": "SAY",
+        "index1": 2,
+        "word2": "SEA",
+        "index2": 2
+      },
+      {
+        "word1": "SAY",
+        "index1": 2,
+        "word2": "YES",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 5,
+    "theme": "Farm Words",
+    "word_count": 4,
+    "gridSize": [
+      4,
+      4
+    ],
+    "letters": [
+      "A",
+      "F",
+      "M",
+      "R"
+    ],
+    "words": [
+      {
+        "word": "FARM",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "ARM",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "word": "RAM",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "FAR",
+        "positions": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            2
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "FARM",
+        "index1": 1,
+        "word2": "ARM",
+        "index2": 0
+      },
+      {
+        "word1": "ARM",
+        "index1": 1,
+        "word2": "RAM",
+        "index2": 1
+      },
+      {
+        "word1": "RAM",
+        "index1": 0,
+        "word2": "FAR",
+        "index2": 1
+      }
+    ]
+  },
+  {
+    "level": 6,
+    "theme": "Mix & Match",
+    "word_count": 5,
+    "gridSize": [
+      5,
+      5
+    ],
+    "letters": [
+      "A",
+      "L",
+      "N",
+      "P"
+    ],
+    "words": [
+      {
+        "word": "PLAN",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "LAP",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "word": "NAP",
+        "positions": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "PAL",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "PAN",
+        "positions": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            2
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "PLAN",
+        "index1": 1,
+        "word2": "LAP",
+        "index2": 0
+      },
+      {
+        "word1": "PLAN",
+        "index1": 2,
+        "word2": "NAP",
+        "index2": 0
+      },
+      {
+        "word1": "LAP",
+        "index1": 2,
+        "word2": "PAL",
+        "index2": 1
+      },
+      {
+        "word1": "NAP",
+        "index1": 2,
+        "word2": "PAL",
+        "index2": 2
+      }
+    ]
+  },
+  {
+    "level": 7,
+    "theme": "Family Words",
+    "word_count": 5,
+    "gridSize": [
+      4,
+      4
+    ],
+    "letters": [
+      "A",
+      "M",
+      "N",
+      "Y"
+    ],
+    "words": [
+      {
+        "word": "MANY",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "MAY",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "word": "YAM",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "MAN",
+        "positions": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "ANY",
+        "positions": [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            3
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "MANY",
+        "index1": 0,
+        "word2": "MAY",
+        "index2": 0
+      },
+      {
+        "word1": "MAY",
+        "index1": 2,
+        "word2": "YAM",
+        "index2": 0
+      },
+      {
+        "word1": "MANY",
+        "index1": 1,
+        "word2": "MAN",
+        "index2": 0
+      },
+      {
+        "word1": "MAN",
+        "index1": 2,
+        "word2": "ANY",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 8,
+    "theme": "Short Prints",
+    "word_count": 6,
+    "gridSize": [
+      5,
+      5
+    ],
+    "letters": [
+      "I",
+      "N",
+      "P",
+      "R",
+      "T"
+    ],
+    "words": [
+      {
+        "word": "RIP",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "PIT",
+        "positions": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "PRINT",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      {
+        "word": "PIN",
+        "positions": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "TRIP",
+        "positions": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "TIN",
+        "positions": [
+          [
+            4,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "RIP",
+        "index1": 2,
+        "word2": "PIT",
+        "index2": 0
+      },
+      {
+        "word1": "PIT",
+        "index1": 2,
+        "word2": "PRINT",
+        "index2": 2
+      },
+      {
+        "word1": "PRINT",
+        "index1": 2,
+        "word2": "PIN",
+        "index2": 0
+      },
+      {
+        "word1": "PIN",
+        "index1": 2,
+        "word2": "TIN",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 9,
+    "theme": "Ends & Bends",
+    "word_count": 6,
+    "gridSize": [
+      5,
+      5
+    ],
+    "letters": [
+      "B",
+      "D",
+      "E",
+      "L",
+      "N"
+    ],
+    "words": [
+      {
+        "word": "BLEND",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ]
+        ]
+      },
+      {
+        "word": "BEND",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            3,
+            1
+          ]
+        ]
+      },
+      {
+        "word": "LEND",
+        "positions": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "LED",
+        "positions": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      {
+        "word": "DEN",
+        "positions": [
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      {
+        "word": "END",
+        "positions": [
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            4,
+            4
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "BLEND",
+        "index1": 1,
+        "word2": "BEND",
+        "index2": 0
+      },
+      {
+        "word1": "BEND",
+        "index1": 1,
+        "word2": "LEND",
+        "index2": 1
+      },
+      {
+        "word1": "LEND",
+        "index1": 2,
+        "word2": "LED",
+        "index2": 0
+      },
+      {
+        "word1": "LED",
+        "index1": 2,
+        "word2": "DEN",
+        "index2": 0
+      },
+      {
+        "word1": "DEN",
+        "index1": 2,
+        "word2": "END",
+        "index2": 0
+      }
+    ]
+  },
+  {
+    "level": 10,
+    "theme": "Claim the Word",
+    "word_count": 6,
+    "gridSize": [
+      5,
+      5
+    ],
+    "letters": [
+      "A",
+      "C",
+      "I",
+      "L",
+      "M"
+    ],
+    "words": [
+      {
+        "word": "CAM",
+        "positions": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "word": "CLAIM",
+        "positions": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      },
+      {
+        "word": "CALM",
+        "positions": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "AIM",
+        "positions": [
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "CLAM",
+        "positions": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "word": "MAIL",
+        "positions": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            3
+          ]
+        ]
+      }
+    ],
+    "intersections": [
+      {
+        "word1": "CAM",
+        "index1": 1,
+        "word2": "CLAIM",
+        "index2": 0
+      },
+      {
+        "word1": "CLAIM",
+        "index1": 2,
+        "word2": "CALM",
+        "index2": 1
+      },
+      {
+        "word1": "CLAIM",
+        "index1": 4,
+        "word2": "AIM",
+        "index2": 0
+      },
+      {
+        "word1": "CLAIM",
+        "index1": 0,
+        "word2": "CLAM",
+        "index2": 1
+      },
+      {
+        "word1": "CLAIM",
+        "index1": 3,
+        "word2": "MAIL",
+        "index2": 1
+      }
+    ]
+  }
+]

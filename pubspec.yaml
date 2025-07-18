@@ -61,7 +61,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/german_words.json
+    - assets/json/levels_final_de_1_to_10.json
+    - assets/json/word_game_lv.json
     - assets/sounds/
     - assets/sounds/button_click.mp3
     - assets/sounds/word_found.mp3

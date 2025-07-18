@@ -1,0 +1,478 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "theme": "Grundbegriffe",
+      "gridSize": {
+        "rows": 5,
+        "cols": 5
+      },
+      "words": [
+        {
+          "word": "HAUS",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3}
+          ]
+        },
+        {
+          "word": "AUTO",
+          "positions": [
+            {"row": 1, "col": 1},
+            {"row": 2, "col": 1},
+            {"row": 3, "col": 1},
+            {"row": 4, "col": 1}
+          ]
+        }
+      ],
+      "letters": ["H", "A", "U", "S", "T", "O"],
+      "intersections": [
+        {
+          "words": ["HAUS", "AUTO"],
+          "commonLetter": "A",
+          "positionInFirst": 1,
+          "positionInSecond": 0
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "theme": "Bewegung",
+      "gridSize": {
+        "rows": 5,
+        "cols": 5
+      },
+      "words": [
+        {
+          "word": "LAUFEN",
+          "positions": [
+            {"row": 0, "col": 0},
+            {"row": 0, "col": 1},
+            {"row": 0, "col": 2},
+            {"row": 0, "col": 3},
+            {"row": 0, "col": 4}
+          ]
+        },
+        {
+          "word": "GEHEN",
+          "positions": [
+            {"row": 0, "col": 2},
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2},
+            {"row": 4, "col": 2}
+          ]
+        }
+      ],
+      "letters": ["L", "A", "U", "F", "E", "N", "G", "H"],
+      "intersections": [
+        {
+          "words": ["LAUFEN", "GEHEN"],
+          "commonLetter": "U",
+          "positionInFirst": 2,
+          "positionInSecond": 2
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "theme": "Alltag",
+      "gridSize": {
+        "rows": 5,
+        "cols": 5
+      },
+      "words": [
+        {
+          "word": "ARBEIT",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3},
+            {"row": 1, "col": 4}
+          ]
+        },
+        {
+          "word": "BERUF",
+          "positions": [
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2},
+            {"row": 4, "col": 2}
+          ]
+        }
+      ],
+      "letters": ["A", "R", "B", "E", "I", "T", "U", "F"],
+      "intersections": [
+        {
+          "words": ["ARBEIT", "BERUF"],
+          "commonLetter": "B",
+          "positionInFirst": 2,
+          "positionInSecond": 0
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "theme": "Frühstück",
+      "gridSize": {
+        "rows": 5,
+        "cols": 5
+      },
+      "words": [
+        {
+          "word": "BUTTER",
+          "positions": [
+            {"row": 0, "col": 1},
+            {"row": 1, "col": 1},
+            {"row": 2, "col": 1},
+            {"row": 3, "col": 1},
+            {"row": 4, "col": 1}
+          ]
+        },
+        {
+          "word": "TOAST",
+          "positions": [
+            {"row": 2, "col": 0},
+            {"row": 2, "col": 1},
+            {"row": 2, "col": 2},
+            {"row": 2, "col": 3},
+            {"row": 2, "col": 4}
+          ]
+        }
+      ],
+      "letters": ["B", "U", "T", "E", "R", "O", "A", "S"],
+      "intersections": [
+        {
+          "words": ["BUTTER", "TOAST"],
+          "commonLetter": "T",
+          "positionInFirst": 2,
+          "positionInSecond": 1
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "theme": "Farben",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "BLAU",
+          "positions": [
+            {"row": 0, "col": 2},
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2}
+          ]
+        },
+        {
+          "word": "GELB",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3}
+          ]
+        },
+        {
+          "word": "ROT",
+          "positions": [
+            {"row": 1, "col": 2},
+            {"row": 4, "col": 2},
+            {"row": 5, "col": 2}
+          ]
+        }
+      ],
+      "letters": ["B", "L", "A", "U", "G", "E", "R", "O", "T"],
+      "intersections": [
+        {
+          "words": ["BLAU", "GELB"],
+          "commonLetter": "L",
+          "positionInFirst": 1,
+          "positionInSecond": 2
+        },
+        {
+          "words": ["GELB", "ROT"],
+          "commonLetter": "L",
+          "positionInFirst": 2,
+          "positionInSecond": 0
+        }
+      ]
+    },
+    {
+      "level": 6,
+      "theme": "Wetter",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "SONNE",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3},
+            {"row": 1, "col": 4}
+          ]
+        },
+        {
+          "word": "REGEN",
+          "positions": [
+            {"row": 0, "col": 2},
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2},
+            {"row": 4, "col": 2}
+          ]
+        },
+        {
+          "word": "WIND",
+          "positions": [
+            {"row": 3, "col": 0},
+            {"row": 3, "col": 1},
+            {"row": 3, "col": 2},
+            {"row": 3, "col": 3}
+          ]
+        }
+      ],
+      "letters": ["S", "O", "N", "E", "R", "G", "W", "I", "D"],
+      "intersections": [
+        {
+          "words": ["SONNE", "REGEN"],
+          "commonLetter": "N",
+          "positionInFirst": 2,
+          "positionInSecond": 2
+        },
+        {
+          "words": ["REGEN", "WIND"],
+          "commonLetter": "E",
+          "positionInFirst": 1,
+          "positionInSecond": 2
+        }
+      ]
+    },
+    {
+      "level": 7,
+      "theme": "Körper",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "KOPF",
+          "positions": [
+            {"row": 0, "col": 1},
+            {"row": 1, "col": 1},
+            {"row": 2, "col": 1},
+            {"row": 3, "col": 1}
+          ]
+        },
+        {
+          "word": "HAND",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3}
+          ]
+        },
+        {
+          "word": "AUGE",
+          "positions": [
+            {"row": 1, "col": 1},
+            {"row": 4, "col": 1},
+            {"row": 5, "col": 1},
+            {"row": 5, "col": 2}
+          ]
+        }
+      ],
+      "letters": ["K", "O", "P", "F", "H", "A", "N", "D", "U", "G", "E"],
+      "intersections": [
+        {
+          "words": ["KOPF", "HAND"],
+          "commonLetter": "O",
+          "positionInFirst": 1,
+          "positionInSecond": 1
+        },
+        {
+          "words": ["HAND", "AUGE"],
+          "commonLetter": "A",
+          "positionInFirst": 1,
+          "positionInSecond": 0
+        }
+      ]
+    },
+    {
+      "level": 8,
+      "theme": "Stadt",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "PARK",
+          "positions": [
+            {"row": 1, "col": 0},
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3}
+          ]
+        },
+        {
+          "word": "BAHN",
+          "positions": [
+            {"row": 0, "col": 2},
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2}
+          ]
+        },
+        {
+          "word": "LADEN",
+          "positions": [
+            {"row": 1, "col": 2},
+            {"row": 4, "col": 2},
+            {"row": 5, "col": 0},
+            {"row": 5, "col": 1},
+            {"row": 5, "col": 2}
+          ]
+        }
+      ],
+      "letters": ["P", "A", "R", "K", "B", "H", "N", "L", "D", "E"],
+      "intersections": [
+        {
+          "words": ["PARK", "BAHN"],
+          "commonLetter": "R",
+          "positionInFirst": 2,
+          "positionInSecond": 2
+        },
+        {
+          "words": ["BAHN", "LADEN"],
+          "commonLetter": "A",
+          "positionInFirst": 1,
+          "positionInSecond": 1
+        }
+      ]
+    },
+    {
+      "level": 9,
+      "theme": "Zahlen",
+      "gridSize": {
+        "rows": 6,
+        "cols": 6
+      },
+      "words": [
+        {
+          "word": "DREI",
+          "positions": [
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3},
+            {"row": 1, "col": 4}
+          ]
+        },
+        {
+          "word": "VIER",
+          "positions": [
+            {"row": 0, "col": 2},
+            {"row": 1, "col": 2},
+            {"row": 2, "col": 2},
+            {"row": 3, "col": 2}
+          ]
+        },
+        {
+          "word": "ACHT",
+          "positions": [
+            {"row": 2, "col": 0},
+            {"row": 2, "col": 1},
+            {"row": 2, "col": 2},
+            {"row": 2, "col": 3}
+          ]
+        }
+      ],
+      "letters": ["D", "R", "E", "I", "V", "A", "C", "H", "T"],
+      "intersections": [
+        {
+          "words": ["DREI", "VIER"],
+          "commonLetter": "R",
+          "positionInFirst": 1,
+          "positionInSecond": 2
+        },
+        {
+          "words": ["VIER", "ACHT"],
+          "commonLetter": "E",
+          "positionInFirst": 2,
+          "positionInSecond": 2
+        }
+      ]
+    },
+    {
+      "level": 10,
+      "theme": "Wochentage",
+      "gridSize": {
+        "rows": 7,
+        "cols": 8
+      },
+      "words": [
+        {
+          "word": "MONTAG",
+          "positions": [
+            {"row": 1, "col": 1},
+            {"row": 1, "col": 2},
+            {"row": 1, "col": 3},
+            {"row": 1, "col": 4},
+            {"row": 1, "col": 5},
+            {"row": 1, "col": 6}
+          ]
+        },
+        {
+          "word": "OKTOBER",
+          "positions": [
+            {"row": 1, "col": 3},
+            {"row": 2, "col": 3},
+            {"row": 3, "col": 3},
+            {"row": 4, "col": 3},
+            {"row": 5, "col": 3},
+            {"row": 6, "col": 3}
+          ]
+        },
+        {
+          "word": "FREITAG",
+          "positions": [
+            {"row": 3, "col": 0},
+            {"row": 3, "col": 1},
+            {"row": 3, "col": 2},
+            {"row": 3, "col": 3},
+            {"row": 3, "col": 4},
+            {"row": 3, "col": 5},
+            {"row": 3, "col": 6}
+          ]
+        }
+      ],
+      "letters": ["M", "O", "N", "T", "A", "G", "K", "B", "E", "R", "F", "I"],
+      "intersections": [
+        {
+          "words": ["MONTAG", "OKTOBER"],
+          "commonLetter": "T",
+          "positionInFirst": 3,
+          "positionInSecond": 2
+        },
+        {
+          "words": ["OKTOBER", "FREITAG"],
+          "commonLetter": "T",
+          "positionInFirst": 3,
+          "positionInSecond": 3
+        }
+      ]
+    }
+  ]
+}

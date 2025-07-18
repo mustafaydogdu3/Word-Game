@@ -32,6 +32,7 @@ class GameModel {
   List<List<String?>> grid;
   int currentLevel;
   String theme;
+  int gridSize; // Dynamic grid size
 
   GameModel({
     required this.letters,
@@ -41,41 +42,40 @@ class GameModel {
     List<List<String?>>? grid,
     this.currentLevel = 1,
     this.theme = 'Basic Articles',
+    this.gridSize = 5, // Default to 5x5
   }) : wordPositions = wordPositions ?? {},
-       grid = grid ?? _generateGrid(targetWords);
+       grid =
+           grid ??
+           _generateGridFromPositions(
+             targetWords,
+             wordPositions ?? {},
+             gridSize,
+           );
 
-  static List<List<String?>> _generateGrid(List<String> targetWords) {
-    // Create 5x5 grid filled with nulls
-    List<List<String?>> grid = List.generate(5, (_) => List.filled(5, null));
+  static List<List<String?>> _generateGridFromPositions(
+    List<String> targetWords,
+    Map<String, List<Position>> wordPositions,
+    int gridSize,
+  ) {
+    // Create grid filled with nulls based on gridSize
+    List<List<String?>> grid = List.generate(
+      gridSize,
+      (_) => List.filled(gridSize, null),
+    );
 
-    // Fixed crossword pattern:
-    //     ■     (row 0, col 2)
-    //     ■     (row 1, col 2)
-    // ■ ■ ■ ■   (row 2, cols 0-3)
-    //       ■   (row 3, col 3)
-    //       ■   (row 4, col 3)
-
-    // Mark positions that should have squares
-    // Vertical line at column 2 (rows 0-2)
-    grid[0][2] = '';
-    grid[1][2] = '';
-    grid[2][2] = '';
-
-    // Horizontal line at row 2 (cols 0-3)
-    grid[2][0] = '';
-    grid[2][1] = '';
-    // grid[2][2] already set above
-    grid[2][3] = '';
-
-    // Vertical line at column 3 (rows 2-4)
-    // grid[2][3] already set above
-    grid[3][3] = '';
-    grid[4][3] = '';
-
-    // Vertical line at column 0 (rows 1-3) for 4th word
-    grid[1][0] = '';
-    grid[2][0] = ''; // already set above
-    grid[3][0] = '';
+    // Place words on grid using positions from JSON
+    for (String word in targetWords) {
+      List<Position> positions = wordPositions[word] ?? [];
+      for (int i = 0; i < positions.length && i < word.length; i++) {
+        Position pos = positions[i];
+        if (pos.row >= 0 &&
+            pos.row < gridSize &&
+            pos.col >= 0 &&
+            pos.col < gridSize) {
+          grid[pos.row][pos.col] = ''; // Mark as active position
+        }
+      }
+    }
 
     return grid;
   }
@@ -88,6 +88,7 @@ class GameModel {
     List<List<String?>>? grid,
     int? currentLevel,
     String? theme,
+    int? gridSize,
   }) {
     return GameModel(
       letters: letters ?? this.letters,
@@ -97,6 +98,7 @@ class GameModel {
       grid: grid ?? this.grid,
       currentLevel: currentLevel ?? this.currentLevel,
       theme: theme ?? this.theme,
+      gridSize: gridSize ?? this.gridSize,
     );
   }
 
@@ -104,8 +106,6 @@ class GameModel {
 
   double get completionPercentage =>
       targetWords.isEmpty ? 0.0 : foundWords.length / targetWords.length;
-
-  int get gridSize => 5; // Fixed 5x5 grid
 
   // Helper method to find positions for a specific word
   List<Position> getWordPositions(String word) {
