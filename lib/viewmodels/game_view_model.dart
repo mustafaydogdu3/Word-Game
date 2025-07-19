@@ -25,7 +25,8 @@ class GameViewModel extends ChangeNotifier {
   GameMode get currentMode => _currentMode;
 
   GameViewModel() {
-    _initializeGame();
+    // Don't auto-initialize to avoid setState during build
+    // Initialization will be called manually from splash screen
   }
 
   Future<void> _initializeGame() async {
@@ -40,6 +41,15 @@ class GameViewModel extends ChangeNotifier {
     await WordService.loadLVWords();
     print('LV words loaded, total LV levels: ${WordService.totalLVLevels}');
 
+    // Verify LV levels are loaded
+    if (WordService.totalLVLevels == 0) {
+      print('WARNING: No LV levels loaded!');
+    } else {
+      print(
+        'LV levels loaded successfully. First level: ${WordService.getLVLevelData(1)?.theme}',
+      );
+    }
+
     // Load saved mode and level
     await _loadSavedState();
     print('Saved state loaded, current mode: ${_currentMode.name}');
@@ -50,12 +60,18 @@ class GameViewModel extends ChangeNotifier {
 
   Future<void> _loadSavedState() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedMode = prefs.getString('game_mode') ?? 'german';
+    final savedMode =
+        prefs.getString('game_mode') ?? 'lv'; // Default to LV mode
     _currentMode = savedMode == 'german' ? GameMode.german : GameMode.lv;
 
-    final savedLevel = prefs.getInt('current_level_${_currentMode.name}') ?? 1;
+    final savedLevel =
+        prefs.getInt('current_level_${_currentMode.name}') ??
+        1; // Always start at level 1
     await _saveCurrentLevel(savedLevel);
     _generatePuzzleForLevel(savedLevel);
+    print(
+      'Saved state loaded, current mode: ${_currentMode.name}, level: $savedLevel',
+    );
   }
 
   Future<void> _saveCurrentLevel(int level) async {
@@ -94,9 +110,16 @@ class GameViewModel extends ChangeNotifier {
           .toList();
     });
 
-    // Use grid size from puzzle if available, otherwise default to 5
-    int gridSize = puzzle.gridSize?.first ?? 5;
-    print('Grid size: $gridSize');
+    // Use grid size directly from JSON without limiting
+    int gridCols = puzzle.gridSize?.first ?? 5;
+    int gridRows = puzzle.gridSize?.length == 2
+        ? puzzle.gridSize![1]
+        : gridCols;
+
+    // For manual placement, use the exact grid size from JSON
+    // No need to limit grid size since positions are manually controlled
+
+    print('Grid size: ${gridCols}x$gridRows');
 
     _game = GameModel(
       letters: puzzle.letters,
@@ -105,7 +128,8 @@ class GameViewModel extends ChangeNotifier {
       wordPositions: gamePositions,
       currentLevel: levelNumber,
       theme: puzzle.theme,
-      gridSize: gridSize,
+      gridRows: gridRows,
+      gridCols: gridCols,
     );
 
     print('Game model updated with letters: ${_game.letters}');
@@ -115,19 +139,33 @@ class GameViewModel extends ChangeNotifier {
   void checkWord(String word) {
     final upperWord = word.toUpperCase();
 
-    if (_game.targetWords.contains(upperWord) &&
-        !_game.foundWords.contains(upperWord)) {
-      _game.foundWords = [..._game.foundWords, upperWord];
+    print('Checking word: "$word" (uppercase: "$upperWord")');
+    print('Target words: ${_game.targetWords}');
+    print('Already found: ${_game.foundWords}');
 
-      // Check if level is completed
-      if (_game.isCompleted) {
-        // Move to next level after a short delay
-        Future.delayed(Duration(seconds: 2), () {
-          _moveToNextLevel();
-        });
+    // Only validate against targetWords list - no grid-based detection
+    if (_game.targetWords.contains(upperWord)) {
+      if (!_game.foundWords.contains(upperWord)) {
+        print(
+          'Word "$upperWord" is valid and not yet found - adding to found words',
+        );
+        _game.foundWords = [..._game.foundWords, upperWord];
+
+        // Check if level is completed
+        if (_game.isCompleted) {
+          print('Level completed! Moving to next level...');
+          // Move to next level after a short delay
+          Future.delayed(Duration(seconds: 2), () {
+            _moveToNextLevel();
+          });
+        }
+
+        notifyListeners();
+      } else {
+        print('Word "$upperWord" is valid but already found');
       }
-
-      notifyListeners();
+    } else {
+      print('Word "$upperWord" is NOT in target words list - ignoring');
     }
   }
 
@@ -212,5 +250,10 @@ class GameViewModel extends ChangeNotifier {
   Future<void> resetProgress() async {
     await _saveCurrentLevel(1);
     _generatePuzzleForLevel(1);
+  }
+
+  // Public method to initialize game (for splash screen)
+  Future<void> initializeGame() async {
+    await _initializeGame();
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/sound_service.dart';
+import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
 import 'game_screen.dart';
 
@@ -26,9 +28,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+
     setState(() {
-      currentLevel = prefs.getInt('current_level') ?? 1;
-      // Set world number to current level
+      // Get current level from GameViewModel instead of SharedPreferences
+      currentLevel = viewModel.game.currentLevel;
       currentWorld = currentLevel;
       worldName = "YOLCULUK $currentLevel";
     });
@@ -46,23 +50,69 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Ayarlar'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getResponsiveBorderRadius(context),
+            ),
+          ),
+          title: Text(
+            'Ayarlar',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.refresh),
-                title: const Text('İlerlemeyi Sıfırla'),
-                subtitle: const Text('Tüm seviyeleri baştan başla'),
+                leading: Icon(
+                  Icons.refresh,
+                  size: ResponsiveHelper.getResponsiveIconSize(context),
+                ),
+                title: Text(
+                  'İlerlemeyi Sıfırla',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
+                      context,
+                    ),
+                  ),
+                ),
+                subtitle: Text(
+                  'Tüm seviyeleri baştan başla',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
+                      context,
+                    ),
+                  ),
+                ),
                 onTap: () {
                   Navigator.of(context).pop();
                   _resetProgress();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('Hakkında'),
-                subtitle: const Text('Almanca Kelime Oyunu v1.0'),
+                leading: Icon(
+                  Icons.info,
+                  size: ResponsiveHelper.getResponsiveIconSize(context),
+                ),
+                title: Text(
+                  'Hakkında',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
+                      context,
+                    ),
+                  ),
+                ),
+                subtitle: Text(
+                  'Kelime Oyunu v1.0',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
+                      context,
+                    ),
+                  ),
+                ),
                 onTap: () {
                   Navigator.of(context).pop();
                 },
@@ -72,7 +122,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Kapat'),
+              child: Text(
+                'Kapat',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
             ),
           ],
         );
@@ -86,19 +141,44 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('İlerlemeyi Sıfırla?'),
-          content: const Text(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getResponsiveBorderRadius(context),
+            ),
+          ),
+          title: Text(
+            'İlerlemeyi Sıfırla?',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
             'Tüm ilerleme kaybedilecek ve Level 1\'den başlayacaksınız. Emin misiniz?',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('İptal'),
+              child: Text(
+                'İptal',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Sıfırla'),
+              child: Text(
+                'Sıfırla',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
             ),
           ],
         );
@@ -122,9 +202,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
             'İlerleme başarıyla sıfırlandı! Level 1\'den başlayabilirsiniz.',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+            ),
           ),
           backgroundColor: Colors.green,
         ),
@@ -134,291 +217,308 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<GameViewModel>(context);
+    final isLandscape = ResponsiveHelper.isLandscape(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final isDesktop = ResponsiveHelper.isDesktop(context);
+    final isLargeDesktop = ResponsiveHelper.isLargeDesktop(context);
+    final shouldUseHorizontalLayout =
+        ResponsiveHelper.shouldUseHorizontalLayout(context);
+
+    // Update current level from viewModel
+    currentLevel = viewModel.game.currentLevel;
+    currentWorld = currentLevel;
+    worldName = "YOLCULUK $currentLevel";
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF87CEEB), // Sky blue at top
-              Color(0xFFFFB6C1), // Light pink in middle
-              Color(0xFFFFE4E1), // Misty rose at bottom
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: [0.0, 0.7, 1.0],
+          image: DecorationImage(
+            image: AssetImage('assets/images/main_menu.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: Stack(
-          children: [
-            // Top UI elements
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        _scoreBox(
-                          icon: Icons.diamond,
-                          value: '900',
-                          iconColor: Colors.green,
-                          backgroundColor: Colors.black87,
-                        ),
-                        const SizedBox(width: 12),
-                        _scoreBox(
-                          icon: Icons.water_drop,
-                          value: '10',
-                          iconColor: Colors.blue,
-                          backgroundColor: Colors.black87,
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () => _showSettingsDialog(),
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.settings,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                    ),
-                  ],
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Top section with score and settings
+              _buildTopSection(context),
+
+              // Main content area
+              Expanded(
+                child: shouldUseHorizontalLayout
+                    ? _buildHorizontalLayout(context)
+                    : _buildVerticalLayout(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSection(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getResponsivePadding(context),
+        vertical: ResponsiveHelper.getResponsiveSpacing(context),
+      ),
+      child: Row(
+        children: [
+          // Score boxes
+          Row(
+            children: [
+              _buildScoreBox(
+                icon: Icons.diamond,
+                value: '900',
+                iconColor: Colors.green,
+                backgroundColor: Colors.black87,
+                context: context,
+              ),
+              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              _buildScoreBox(
+                icon: Icons.water_drop,
+                value: '10',
+                iconColor: Colors.blue,
+                backgroundColor: Colors.black87,
+                context: context,
+              ),
+            ],
+          ),
+
+          Spacer(),
+
+          // Settings button
+          GestureDetector(
+            onTap: () async {
+              await SoundService.playButtonClick();
+              _showSettingsDialog();
+            },
+            child: Container(
+              width: ResponsiveHelper.getResponsiveSettingsButtonSize(context),
+              height: ResponsiveHelper.getResponsiveSettingsButtonSize(context),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black87, Colors.black54],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.settings,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context),
               ),
             ),
-            // Title
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.15,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Colors.white, Color(0xFFF0E68C)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ).createShader(bounds),
-                    child: const Text(
-                      'WORD GAME',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 4,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black54,
-                            offset: Offset(2, 2),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                    ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalLayout(BuildContext context) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveMargin(context),
+      child: Column(
+        children: [
+          // Top spacing
+          SizedBox(
+            height: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
+          ),
+
+          // Game title at top
+          _buildGameTitle(context),
+
+          // Spacing between title and level circle
+          SizedBox(height: ResponsiveHelper.getResponsiveLargeSpacing(context)),
+
+          // Level circle right below the title
+          _buildLevelInfo(context),
+
+          // Spacer to push play button to bottom
+          Expanded(child: SizedBox()),
+
+          // Play button at bottom
+          _buildPlayButton(context),
+
+          // Bottom spacing
+          SizedBox(height: ResponsiveHelper.getResponsiveLargeSpacing(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHorizontalLayout(BuildContext context) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveMargin(context),
+      child: Row(
+        children: [
+          // Left side - Game title
+          Expanded(
+            flex: 1,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [_buildGameTitle(context)],
+            ),
+          ),
+
+          SizedBox(
+            width: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
+          ),
+
+          // Center - Level info
+          Expanded(flex: 1, child: Center(child: _buildLevelInfo(context))),
+
+          SizedBox(
+            width: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
+          ),
+
+          // Right side - Play button
+          Expanded(flex: 1, child: Center(child: _buildPlayButton(context))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameTitle(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'WORD',
+          style: GoogleFonts.pressStart2p(
+            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
+              context,
+              mobile: 32.0,
+              tablet: 42.0,
+              desktop: 52.0,
+            ),
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.7),
+                offset: const Offset(3, 3),
+                blurRadius: 8,
+              ),
+              Shadow(
+                color: Colors.blue.withOpacity(0.5),
+                offset: const Offset(1, 1),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+        Text(
+          'GAME',
+          style: GoogleFonts.pressStart2p(
+            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
+              context,
+              mobile: 32.0,
+              tablet: 42.0,
+              desktop: 52.0,
+            ),
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.7),
+                offset: const Offset(3, 3),
+                blurRadius: 8,
+              ),
+              Shadow(
+                color: Colors.orange.withOpacity(0.5),
+                offset: const Offset(1, 1),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLevelInfo(BuildContext context) {
+    final circleSize = ResponsiveHelper.getResponsiveButtonWidth(context) * 0.6;
+
+    return Container(
+      width: circleSize,
+      height: circleSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.15),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Level number at top
+            Text(
+              '$currentLevel',
+              style: GoogleFonts.orbitron(
+                fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
+                  context,
+                  mobile: 32.0,
+                  tablet: 40.0,
+                  desktop: 48.0,
+                ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 2.0,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.5),
+                    offset: const Offset(2, 2),
+                    blurRadius: 6,
                   ),
                 ],
               ),
             ),
-            // World info circle
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.4,
-              left: MediaQuery.of(context).size.width * 0.5 - 80,
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.5),
-                    width: 2,
+            SizedBox(
+              height: ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
+            ),
+            // YOLCULUK text at bottom
+            Text(
+              'YOLCULUK',
+              style: GoogleFonts.orbitron(
+                fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
+                  context,
+                  mobile: 12.0,
+                  tablet: 14.0,
+                  desktop: 16.0,
+                ),
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 1.5,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.5),
+                    offset: const Offset(1, 1),
+                    blurRadius: 3,
                   ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      currentLevel.toString(),
-                      style: const TextStyle(
-                        fontSize: 72,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black54,
-                            offset: Offset(2, 2),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      worldName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black54,
-                            offset: Offset(1, 1),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Tulip field background (simplified)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.3,
-              child: CustomPaint(
-                painter: SimpleTulipFieldPainter(),
-                size: Size.infinite,
-              ),
-            ),
-            // Bottom level button
-            Positioned(
-              bottom: 60,
-              left: MediaQuery.of(context).size.width * 0.5 - 100,
-              child: GestureDetector(
-                onTap: () async {
-                  await SoundService.playButtonClick();
-                  // Load current level and navigate to game
-                  final viewModel = Provider.of<GameViewModel>(
-                    context,
-                    listen: false,
-                  );
-                  viewModel.goToLevel(currentLevel);
-
-                  Navigator.of(context)
-                      .push(
-                        MaterialPageRoute(
-                          builder: (context) => const GameScreen(),
-                        ),
-                      )
-                      .then((_) async {
-                        // Refresh level when returning from game
-                        await _loadProgress();
-                      });
-                },
-                child: Container(
-                  width: 200,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4CAF50), Color(0xFF45a049)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'BÖLÜM $currentLevel',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Bottom left profile button
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.person, color: Colors.white, size: 30),
-              ),
-            ),
-            // Bottom right rewards button
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    const Center(
-                      child: Icon(
-                        Icons.card_giftcard,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '6',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           ],
@@ -427,28 +527,142 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _scoreBox({
+  Widget _buildPlayButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await SoundService.playButtonClick();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const GameScreen()),
+        );
+      },
+      child: Container(
+        width: ResponsiveHelper.getResponsiveButtonWidth(context),
+        height: ResponsiveHelper.getResponsiveButtonHeight(context),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF66BB6A), Color(0xFF81C784)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(
+            ResponsiveHelper.getResponsiveBorderRadius(context),
+          ),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.5),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(
+                ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context),
+              ),
+            ),
+            SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+            Text(
+              'OYNA',
+              style: GoogleFonts.orbitron(
+                fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
+                  context,
+                  mobile: 16.0,
+                  tablet: 20.0,
+                  desktop: 24.0,
+                ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 2.0,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.3),
+                    offset: const Offset(1, 1),
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreBox({
     required IconData icon,
     required String value,
     required Color iconColor,
     required Color backgroundColor,
+    required BuildContext context,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getResponsiveSpacing(context),
+        vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(context),
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          ResponsiveHelper.getResponsiveBorderRadius(context),
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(width: 6),
+          Container(
+            padding: EdgeInsets.all(
+              ResponsiveHelper.getResponsiveSpacing(context) * 0.3,
+            ),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: ResponsiveHelper.getResponsiveIconSize(
+                context,
+                mobile: 18.0,
+                tablet: 20.0,
+                desktop: 22.0,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: ResponsiveHelper.getResponsiveSpacing(context) * 0.75,
+          ),
           Text(
             value,
-            style: const TextStyle(
+            style: GoogleFonts.orbitron(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              letterSpacing: 1.0,
             ),
           ),
         ],

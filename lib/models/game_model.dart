@@ -29,10 +29,12 @@ class GameModel {
   List<String> targetWords;
   List<String> foundWords;
   Map<String, List<Position>> wordPositions;
-  List<List<String?>> grid;
+  List<List<String?>>
+  grid; // Visual display only - not used for word validation
   int currentLevel;
   String theme;
-  int gridSize; // Dynamic grid size
+  int gridRows; // Number of rows
+  int gridCols; // Number of columns
 
   GameModel({
     required this.letters,
@@ -42,25 +44,34 @@ class GameModel {
     List<List<String?>>? grid,
     this.currentLevel = 1,
     this.theme = 'Basic Articles',
-    this.gridSize = 5, // Default to 5x5
+    int? gridRows,
+    int? gridCols,
   }) : wordPositions = wordPositions ?? {},
+       gridRows = gridRows ?? 5,
+       gridCols = gridCols ?? 5,
        grid =
            grid ??
            _generateGridFromPositions(
              targetWords,
              wordPositions ?? {},
-             gridSize,
+             gridRows ?? 5,
+             gridCols ?? 5,
            );
 
   static List<List<String?>> _generateGridFromPositions(
     List<String> targetWords,
     Map<String, List<Position>> wordPositions,
-    int gridSize,
+    int gridRows,
+    int gridCols,
   ) {
-    // Create grid filled with nulls based on gridSize
+    // Use exact grid size from JSON for manual placement
+    final actualRows = gridRows;
+    final actualCols = gridCols;
+
+    // Create grid filled with nulls based on actual grid size
     List<List<String?>> grid = List.generate(
-      gridSize,
-      (_) => List.filled(gridSize, null),
+      actualRows,
+      (_) => List.filled(actualCols, null),
     );
 
     // Place words on grid using positions from JSON
@@ -69,10 +80,10 @@ class GameModel {
       for (int i = 0; i < positions.length && i < word.length; i++) {
         Position pos = positions[i];
         if (pos.row >= 0 &&
-            pos.row < gridSize &&
+            pos.row < actualRows &&
             pos.col >= 0 &&
-            pos.col < gridSize) {
-          grid[pos.row][pos.col] = ''; // Mark as active position
+            pos.col < actualCols) {
+          grid[pos.row][pos.col] = word[i]; // Place the actual letter
         }
       }
     }
@@ -88,7 +99,8 @@ class GameModel {
     List<List<String?>>? grid,
     int? currentLevel,
     String? theme,
-    int? gridSize,
+    int? gridRows,
+    int? gridCols,
   }) {
     return GameModel(
       letters: letters ?? this.letters,
@@ -98,7 +110,8 @@ class GameModel {
       grid: grid ?? this.grid,
       currentLevel: currentLevel ?? this.currentLevel,
       theme: theme ?? this.theme,
-      gridSize: gridSize ?? this.gridSize,
+      gridRows: gridRows ?? this.gridRows,
+      gridCols: gridCols ?? this.gridCols,
     );
   }
 
@@ -114,6 +127,6 @@ class GameModel {
 
   // Helper to check if a position is valid
   bool isValidPosition(int row, int col) {
-    return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
+    return row >= 0 && row < gridRows && col >= 0 && col < gridCols;
   }
 }

@@ -17,7 +17,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameViewModel())],
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => GameViewModel(),
+          lazy: true, // Lazy initialization to avoid build-time issues
+        ),
+      ],
       child: MaterialApp(
         title: 'Word Game',
         theme: ThemeData(primarySwatch: Colors.blue),

@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/game_model.dart';
 import '../services/sound_service.dart';
+import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
 
 class GameScreen extends StatefulWidget {
@@ -30,21 +32,26 @@ class _GameScreenState extends State<GameScreen> {
       isPanning = true;
 
       // Check if starting on a letter
-      final touchRadius = 50.0;
+      final touchRadius =
+          ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
+      final circleSize = ResponsiveHelper.getResponsiveLetterCircleSize(
+        context,
+      );
+      final center = circleSize / 2;
+      final radius = circleSize * 0.35;
+
       for (int i = 0; i < letters.length; i++) {
         final double angle = (2 * pi * i) / letters.length - pi / 2;
-        final double centerX = 200;
-        final double centerY = 200;
-        final double r = 140;
         final letterCenter = Offset(
-          centerX + r * cos(angle),
-          centerY + r * sin(angle),
+          center + radius * cos(angle),
+          center + radius * sin(angle),
         );
         if ((position - letterCenter).distance < touchRadius) {
-          selectedIndexes.add(i);
-          linePoints.add(letterCenter);
-          // Play word_found sound when starting letter selection
-          SoundService.playWordFound();
+          if (!selectedIndexes.contains(i)) {
+            selectedIndexes.add(i);
+            linePoints.add(letterCenter);
+            SoundService.playWordFound();
+          }
           break;
         }
       }
@@ -70,42 +77,26 @@ class _GameScreenState extends State<GameScreen> {
       }
 
       // Check if over a letter
-      final touchRadius = 50.0;
+      final touchRadius =
+          ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
+      final circleSize = ResponsiveHelper.getResponsiveLetterCircleSize(
+        context,
+      );
+      final center = circleSize / 2;
+      final radius = circleSize * 0.35;
+
       for (int i = 0; i < letters.length; i++) {
         final double angle = (2 * pi * i) / letters.length - pi / 2;
-        final double centerX = 200;
-        final double centerY = 200;
-        final double r = 140;
         final letterCenter = Offset(
-          centerX + r * cos(angle),
-          centerY + r * sin(angle),
+          center + radius * cos(angle),
+          center + radius * sin(angle),
         );
 
         if ((position - letterCenter).distance < touchRadius) {
-          // Check if this letter is already selected
-          if (selectedIndexes.contains(i)) {
-            // If it's not the last selected letter, remove letters after it (going back)
-            final currentIndex = selectedIndexes.indexOf(i);
-            if (currentIndex < selectedIndexes.length - 1) {
-              // Remove letters after this one
-              final lettersToRemove = selectedIndexes.length - currentIndex - 1;
-              for (int j = 0; j < lettersToRemove; j++) {
-                selectedIndexes.removeLast();
-                if (linePoints.length >= 2) {
-                  linePoints.removeLast();
-                  linePoints.removeLast();
-                }
-              }
-              // Update the current line endpoint to this letter
-              if (linePoints.isNotEmpty) {
-                linePoints.last = letterCenter;
-              }
-            }
-          } else {
-            // Add new letter to selection
+          if (!selectedIndexes.contains(i)) {
             selectedIndexes.add(i);
-            linePoints.last = letterCenter;
             linePoints.add(letterCenter);
+            SoundService.playWordFound();
           }
           break;
         }
@@ -113,462 +104,756 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _handlePanEnd(BuildContext context) async {
+  void _handlePanEnd(BuildContext context) {
+    setState(() {
+      isPanning = false;
+    });
+
     final viewModel = Provider.of<GameViewModel>(context, listen: false);
     final letters = viewModel.game.letters;
+
+    // Only validate words selected from the circle - NOT from grid positions
     final selectedWord = selectedIndexes
         .where((i) => i >= 0 && i < letters.length)
         .map((i) => letters[i])
         .join();
 
     if (selectedWord.isNotEmpty) {
-      final wasWordFound =
-          viewModel.game.targetWords.contains(selectedWord.toUpperCase()) &&
-          !viewModel.game.foundWords.contains(selectedWord.toUpperCase());
-
+      print('Player selected word from circle: "$selectedWord"');
       viewModel.checkWord(selectedWord);
-
-      // Play sound only for valid words found
-      if (wasWordFound) {
-        await SoundService.playWordFound();
-
-        // Check if level completed after this word
-        if (viewModel.game.isCompleted) {
-          Future.delayed(Duration(milliseconds: 500), () async {
-            await SoundService.playLevelComplete();
-          });
-        }
-      }
-      // No sound for invalid words - just remove the error sound
     }
 
     setState(() {
-      isPanning = false;
       selectedIndexes.clear();
       linePoints.clear();
     });
   }
 
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getResponsiveBorderRadius(context),
+            ),
+          ),
+          title: Text(
+            'Ayarlar',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSettingsButton(
+                icon: Icons.volume_up,
+                label: 'Ses Açık',
+                iconColor: Colors.green,
+                backgroundColor: Colors.green.shade100,
+                context: context,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // Handle sound settings
+                },
+              ),
+              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+              _buildSettingsButton(
+                icon: Icons.volume_off,
+                label: 'Ses Kapalı',
+                iconColor: Colors.red,
+                backgroundColor: Colors.red.shade100,
+                context: context,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // Handle sound settings
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Kapat',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context);
+    final isLandscape = ResponsiveHelper.isLandscape(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final isDesktop = ResponsiveHelper.isDesktop(context);
+    final shouldUseCompactLayout = ResponsiveHelper.shouldUseCompactLayout(
+      context,
+    );
 
     // Show loading screen while initializing
     if (viewModel.isLoading) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text('Kelimeler yükleniyor...', style: TextStyle(fontSize: 18)),
+              SizedBox(
+                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
+              ),
+              Text(
+                'Kelimeler yükleniyor...',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
             ],
           ),
         ),
       );
     }
 
+    final grid = viewModel.game.grid;
+    final gridRows = viewModel.game.gridRows;
+    final gridCols = viewModel.game.gridCols;
     final letters = viewModel.game.letters;
     final selectedWord = selectedIndexes
         .where((i) => i >= 0 && i < letters.length)
         .map((i) => letters[i])
         .join();
-    final grid = viewModel.game.grid;
-    final gridSize = viewModel.game.gridSize;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Egyptian desert background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF4a4fb5), // Deep blue at top
-                  Color(0xFF7b5fb0), // Purple middle
-                  Color(0xFFf4a261), // Orange/yellow at bottom
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0.0, 0.6, 1.0],
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF4a4fb5), // Deep blue at top
+              Color(0xFF7b5fb0), // Purple middle
+              Color(0xFFf4a261), // Orange/yellow at bottom
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.6, 1.0],
           ),
-          // Egyptian landscape silhouette
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SizedBox(
-              height: 400,
-              child: CustomPaint(
-                painter: EgyptianLandscapePainter(),
-                size: Size(double.infinity, 400),
-              ),
-            ),
-          ),
-          // Top score and settings
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      _scoreBox(
-                        icon: Icons.diamond,
-                        value: '900',
-                        iconColor: Colors.green,
-                        backgroundColor: Colors.black87,
-                      ),
-                      const SizedBox(width: 12),
-                      _scoreBox(
-                        icon: Icons.water_drop,
-                        value: '10',
-                        iconColor: Colors.blue,
-                        backgroundColor: Colors.black87,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      // Mode indicator
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          viewModel.modeInfo,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Level indicator
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Level ${viewModel.game.currentLevel}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: () async {
-                            await SoundService.playButtonClick();
-                            _showSettingsDialog(context);
-                          },
-                          icon: const Icon(
-                            Icons.settings,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Puzzle grid - now supports dynamic sizes
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 140),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: grid.asMap().entries.map((rowEntry) {
-                  final rowIndex = rowEntry.key;
-                  final row = rowEntry.value;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: row.asMap().entries.map((cellEntry) {
-                      final colIndex = cellEntry.key;
-                      final cell = cellEntry.value;
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Top section with game info
+              _buildTopSection(context, viewModel),
 
-                      if (cell == null)
-                        return SizedBox(
-                          width: gridSize <= 4 ? 70 : 62,
-                          height: gridSize <= 4 ? 70 : 62,
-                        );
-
-                      // Find which letter should be displayed at this position
-                      String? displayLetter;
-                      bool isPartOfFoundWord = false;
-
-                      // Check each found word to see if this position contains a letter
-                      for (String foundWord in viewModel.game.foundWords) {
-                        final positions = viewModel.getWordPositions(foundWord);
-                        for (
-                          int i = 0;
-                          i < positions.length && i < foundWord.length;
-                          i++
-                        ) {
-                          final pos = positions[i];
-                          if (pos.row == rowIndex && pos.col == colIndex) {
-                            displayLetter = foundWord[i];
-                            isPartOfFoundWord = true;
-                            break;
-                          }
-                        }
-                        if (isPartOfFoundWord) break;
-                      }
-
-                      return Container(
-                        margin: const EdgeInsets.all(4),
-                        width: gridSize <= 4 ? 62 : 54,
-                        height: gridSize <= 4 ? 62 : 54,
-                        decoration: BoxDecoration(
-                          color: isPartOfFoundWord
-                              ? Colors.green.withOpacity(0.8)
-                              : Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            displayLetter ?? '',
-                            style: TextStyle(
-                              color: isPartOfFoundWord
-                                  ? Colors.white
-                                  : Colors.black87,
-                              fontSize: gridSize <= 4 ? 24 : 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          // Letter circle - positioned lower and larger
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 60),
-              child: SizedBox(
-                width: 400,
-                height: 400,
-                child: GestureDetector(
-                  onPanStart: (details) {
-                    _handlePanStart(details.localPosition, context);
-                  },
-                  onPanUpdate: (details) {
-                    _handlePanUpdate(details.localPosition, context);
-                  },
-                  onPanEnd: (details) {
-                    _handlePanEnd(context);
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Main circle background
-                      Container(
-                        width: 320,
-                        height: 320,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 15,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Custom painter for drawing lines
-                      if (isPanning && linePoints.isNotEmpty)
-                        CustomPaint(
-                          size: const Size(400, 400),
-                          painter: LinePainter(linePoints),
-                        ),
-                      // Letters around the circle
-                      ..._buildCircleLetters(letters, selectedIndexes),
-                      // Shuffle button in center
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: GestureDetector(
-                            onTap: () async {
-                              await SoundService.playShuffle();
-                              viewModel.shuffleLetters();
-                            },
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.shuffle,
-                                color: Colors.black54,
-                                size: 32,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              // Main game area
+              Expanded(
+                child: _buildGameArea(
+                  context,
+                  viewModel,
+                  grid,
+                  gridRows,
+                  gridCols,
+                  selectedWord,
                 ),
               ),
-            ),
+
+              // Bottom section with letter circle
+              _buildBottomSection(context, viewModel, letters),
+            ],
           ),
-          // Lightbulb hint button - positioned at right center of screen
-          Positioned(
-            right: 20,
-            top: MediaQuery.of(context).size.height * 0.5 - 32,
-            child: GestureDetector(
-              onTap: () async {
-                await SoundService.playButtonClick();
-                final hint = viewModel.getHint();
-                if (hint != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('İpucu: $hint'),
-                      duration: const Duration(seconds: 3),
-                      backgroundColor: Colors.amber,
-                    ),
-                  );
-                }
-              },
-              child: Container(
-                width: 64,
-                height: 64,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSection(BuildContext context, GameViewModel viewModel) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getResponsivePadding(context),
+        vertical: ResponsiveHelper.getResponsiveSpacing(context),
+      ),
+      child: Row(
+        children: [
+          // Score boxes
+          Row(
+            children: [
+              _buildScoreBox(
+                icon: Icons.diamond,
+                value: '900',
+                iconColor: Colors.green,
+                backgroundColor: Colors.black87,
+                context: context,
+              ),
+              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              _buildScoreBox(
+                icon: Icons.water_drop,
+                value: '10',
+                iconColor: Colors.blue,
+                backgroundColor: Colors.black87,
+                context: context,
+              ),
+            ],
+          ),
+
+          Spacer(),
+
+          // Mode and level indicators
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveHelper.getResponsiveSpacing(context),
+                  vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(
+                    context,
+                  ),
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black87,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(
+                    ResponsiveHelper.getResponsiveBorderRadius(context),
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.lightbulb, color: Colors.amber, size: 24),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${viewModel.game.targetWords.length - viewModel.game.foundWords.length}',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                child: Text(
+                  'Seviye ${viewModel.game.currentLevel}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
+                      context,
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          // Selected word display
-          if (selectedWord.isNotEmpty)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 420),
+              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              GestureDetector(
+                onTap: () async {
+                  await SoundService.playButtonClick();
+                  _showSettingsDialog(context);
+                },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
+                  width: ResponsiveHelper.getResponsiveSettingsButtonSize(
+                    context,
+                  ),
+                  height: ResponsiveHelper.getResponsiveSettingsButtonSize(
+                    context,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                      ),
-                    ],
+                    color: Colors.black87,
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    selectedWord,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                  child: Icon(
+                    Icons.settings,
+                    color: Colors.white,
+                    size: ResponsiveHelper.getResponsiveIconSize(context),
                   ),
                 ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _scoreBox({
+  Widget _buildGameArea(
+    BuildContext context,
+    GameViewModel viewModel,
+    List<List<String?>> grid,
+    int gridRows,
+    int gridCols,
+    String selectedWord,
+  ) {
+    final isLandscape = ResponsiveHelper.isLandscape(context);
+    final shouldUseCompactLayout = ResponsiveHelper.shouldUseCompactLayout(
+      context,
+    );
+    final shouldUseHorizontalLayout =
+        ResponsiveHelper.shouldUseHorizontalLayout(context);
+
+    return Column(
+      children: [
+        // Puzzle grid - Optimized to only show cells with letters
+        Expanded(
+          flex: shouldUseCompactLayout
+              ? 2
+              : (shouldUseHorizontalLayout ? 4 : 3),
+          child: Center(child: _buildOptimizedGrid(context, viewModel, grid)),
+        ),
+
+        // Selected word display
+        if (selectedWord.isNotEmpty)
+          Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: ResponsiveHelper.getResponsivePadding(context),
+              vertical: ResponsiveHelper.getResponsiveSpacing(context),
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveHelper.getResponsiveLargeSpacing(context),
+              vertical: ResponsiveHelper.getResponsiveSpacing(context),
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(
+                ResponsiveHelper.getResponsiveBorderRadius(context),
+              ),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
+              ],
+            ),
+            child: Text(
+              selectedWord,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
+                  context,
+                  mobile: 20.0,
+                  tablet: 28.0,
+                  desktop: 36.0,
+                ),
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildOptimizedGrid(
+    BuildContext context,
+    GameViewModel viewModel,
+    List<List<String?>> grid,
+  ) {
+    // Build a set of all unique positions from all words
+    Set<String> allPositions = {};
+    Map<String, String> positionToLetter = {};
+
+    // Collect all positions from all target words
+    for (String word in viewModel.game.targetWords) {
+      List<Position> positions = viewModel.getWordPositions(word);
+      for (int i = 0; i < positions.length && i < word.length; i++) {
+        Position pos = positions[i];
+        String positionKey = '${pos.row},${pos.col}';
+        allPositions.add(positionKey);
+
+        // Map the letter at this position
+        if (i < word.length) {
+          positionToLetter[positionKey] = word[i];
+        }
+      }
+    }
+
+    if (allPositions.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(
+          ResponsiveHelper.getResponsiveLargeSpacing(context),
+        ),
+        child: Text(
+          'Grid boş',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+            color: Colors.white70,
+          ),
+        ),
+      );
+    }
+
+    // Calculate grid bounds from all positions
+    int minRow = 999999;
+    int maxRow = -999999;
+    int minCol = 999999;
+    int maxCol = -999999;
+
+    for (String positionKey in allPositions) {
+      List<String> coords = positionKey.split(',');
+      int row = int.parse(coords[0]);
+      int col = int.parse(coords[1]);
+
+      minRow = min(minRow, row);
+      maxRow = max(maxRow, row);
+      minCol = min(minCol, col);
+      maxCol = max(maxCol, col);
+    }
+
+    // Calculate grid dimensions
+    int gridWidth = maxCol - minCol + 1;
+    int gridHeight = maxRow - minRow + 1;
+
+    // Calculate cell size and spacing with better responsive logic
+    double cellSize = ResponsiveHelper.getResponsiveGridCellSize(context);
+    double cellSpacing = ResponsiveHelper.getResponsiveSpacing(context) * 0.5;
+    double totalCellSize = cellSize + cellSpacing;
+
+    // Calculate total grid dimensions
+    double totalGridWidth = gridWidth * totalCellSize - cellSpacing;
+    double totalGridHeight = gridHeight * totalCellSize - cellSpacing;
+
+    // Get available space for grid
+    final availableWidth = ResponsiveHelper.getAvailableWidth(context);
+    final availableHeight = ResponsiveHelper.getAvailableHeight(context);
+    final shouldUseHorizontalLayout =
+        ResponsiveHelper.shouldUseHorizontalLayout(context);
+
+    // Calculate max grid size based on available space
+    double maxGridWidth = shouldUseHorizontalLayout
+        ? availableWidth * 0.6
+        : availableWidth * 0.9;
+    double maxGridHeight = shouldUseHorizontalLayout
+        ? availableHeight * 0.7
+        : availableHeight * 0.5;
+
+    // Scale grid if it's too large
+    double scaleFactor = 1.0;
+    if (totalGridWidth > maxGridWidth || totalGridHeight > maxGridHeight) {
+      double widthScale = maxGridWidth / totalGridWidth;
+      double heightScale = maxGridHeight / totalGridHeight;
+      scaleFactor = min(widthScale, heightScale);
+    }
+
+    // Apply scale factor
+    double scaledCellSize = cellSize * scaleFactor;
+    double scaledCellSpacing = cellSpacing * scaleFactor;
+    double scaledTotalCellSize = scaledCellSize + scaledCellSpacing;
+
+    double scaledTotalGridWidth =
+        gridWidth * scaledTotalCellSize - scaledCellSpacing;
+    double scaledTotalGridHeight =
+        gridHeight * scaledTotalCellSize - scaledCellSpacing;
+
+    // Create optimized grid with proper centering
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: maxGridWidth,
+        maxHeight: maxGridHeight,
+      ),
+      child: Center(
+        child: SizedBox(
+          width: scaledTotalGridWidth,
+          height: scaledTotalGridHeight,
+          child: Stack(
+            children: allPositions.map((positionKey) {
+              List<String> coords = positionKey.split(',');
+              int originalRow = int.parse(coords[0]);
+              int originalCol = int.parse(coords[1]);
+
+              // Calculate offset positions (normalize to 0,0)
+              int offsetRow = originalRow - minRow;
+              int offsetCol = originalCol - minCol;
+
+              // Calculate pixel positions
+              double left = offsetCol * scaledTotalCellSize;
+              double top = offsetRow * scaledTotalCellSize;
+
+              String letter = positionToLetter[positionKey] ?? '?';
+              bool isPartOfFoundWord = _isPositionInFoundWord(
+                viewModel,
+                originalRow,
+                originalCol,
+              );
+
+              return Positioned(
+                left: left,
+                top: top,
+                child: Container(
+                  width: scaledCellSize,
+                  height: scaledCellSize,
+                  decoration: BoxDecoration(
+                    color: isPartOfFoundWord
+                        ? Colors.green.withOpacity(0.8)
+                        : Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveHelper.getResponsiveBorderRadius(context) *
+                          scaleFactor,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4 * scaleFactor,
+                        offset: Offset(0, 2 * scaleFactor),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        color: isPartOfFoundWord
+                            ? Colors.white
+                            : Colors.black87,
+                        fontSize:
+                            ResponsiveHelper.getResponsiveBodyFontSize(
+                              context,
+                            ) *
+                            scaleFactor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _isPositionInFoundWord(GameViewModel viewModel, int row, int col) {
+    for (String foundWord in viewModel.game.foundWords) {
+      final positions = viewModel.getWordPositions(foundWord);
+      for (int i = 0; i < positions.length && i < foundWord.length; i++) {
+        final pos = positions[i];
+        if (pos.row == row && pos.col == col) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Widget _buildBottomSection(
+    BuildContext context,
+    GameViewModel viewModel,
+    List<String> letters,
+  ) {
+    final isLandscape = ResponsiveHelper.isLandscape(context);
+    final shouldUseCompactLayout = ResponsiveHelper.shouldUseCompactLayout(
+      context,
+    );
+    final shouldUseHorizontalLayout =
+        ResponsiveHelper.shouldUseHorizontalLayout(context);
+
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: ResponsiveHelper.getResponsiveBottomOffset(context),
+        left: ResponsiveHelper.getResponsivePadding(context),
+        right: ResponsiveHelper.getResponsivePadding(context),
+      ),
+      child: Column(
+        children: [
+          // Hint button
+          if (!shouldUseCompactLayout)
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: () async {
+                  await SoundService.playButtonClick();
+                  final hint = viewModel.getHint();
+                  if (hint != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('İpucu: $hint'),
+                        duration: const Duration(seconds: 3),
+                        backgroundColor: Colors.amber,
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveHelper.getResponsiveSpacing(context),
+                    vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(
+                      context,
+                    ),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveHelper.getResponsiveBorderRadius(context),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.lightbulb,
+                        color: Colors.white,
+                        size: ResponsiveHelper.getResponsiveIconSize(context),
+                      ),
+                      SizedBox(
+                        width:
+                            ResponsiveHelper.getResponsiveSpacing(context) *
+                            0.5,
+                      ),
+                      Text(
+                        'İpucu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
+                            context,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+          // Letter circle with responsive sizing
+          Center(
+            child: SizedBox(
+              width: ResponsiveHelper.getResponsiveLetterCircleSize(context),
+              height: ResponsiveHelper.getResponsiveLetterCircleSize(context),
+              child: GestureDetector(
+                onPanStart: (details) {
+                  _handlePanStart(details.localPosition, context);
+                },
+                onPanUpdate: (details) {
+                  _handlePanUpdate(details.localPosition, context);
+                },
+                onPanEnd: (details) {
+                  _handlePanEnd(context);
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Main circle background
+                    Container(
+                      width:
+                          ResponsiveHelper.getResponsiveLetterCircleSize(
+                            context,
+                          ) *
+                          0.8,
+                      height:
+                          ResponsiveHelper.getResponsiveLetterCircleSize(
+                            context,
+                          ) *
+                          0.8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Custom painter for drawing lines
+                    if (isPanning && linePoints.isNotEmpty)
+                      CustomPaint(
+                        size: Size(
+                          ResponsiveHelper.getResponsiveLetterCircleSize(
+                            context,
+                          ),
+                          ResponsiveHelper.getResponsiveLetterCircleSize(
+                            context,
+                          ),
+                        ),
+                        painter: LinePainter(linePoints),
+                      ),
+                    // Letters around the circle
+                    ..._buildCircleLetters(letters, selectedIndexes),
+                    // Shuffle button in center
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: GestureDetector(
+                          onTap: () async {
+                            await SoundService.playShuffle();
+                            viewModel.shuffleLetters();
+                          },
+                          child: Container(
+                            width:
+                                ResponsiveHelper.getResponsiveShuffleButtonSize(
+                                  context,
+                                ),
+                            height:
+                                ResponsiveHelper.getResponsiveShuffleButtonSize(
+                                  context,
+                                ),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.shuffle,
+                              color: Colors.black54,
+                              size: ResponsiveHelper.getResponsiveIconSize(
+                                context,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreBox({
     required IconData icon,
     required String value,
     required Color iconColor,
     required Color backgroundColor,
+    required BuildContext context,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getResponsiveSpacing(context),
+        vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(context),
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          ResponsiveHelper.getResponsiveBorderRadius(context),
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(width: 6),
+          Icon(
+            icon,
+            color: iconColor,
+            size: ResponsiveHelper.getResponsiveIconSize(
+              context,
+              mobile: 18.0,
+              tablet: 22.0,
+              desktop: 26.0,
+            ),
+          ),
+          SizedBox(
+            width: ResponsiveHelper.getResponsiveSpacing(context) * 0.75,
+          ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
             ),
           ),
         ],
@@ -580,9 +865,14 @@ class _GameScreenState extends State<GameScreen> {
     List<String> letters,
     List<int> selectedIndexes,
   ) {
-    final double center = 200;
-    final double radius = 140;
-    final double letterRadius = 40;
+    final double circleSize = ResponsiveHelper.getResponsiveLetterCircleSize(
+      context,
+    );
+    final double center = circleSize / 2;
+    final double radius = circleSize * 0.35;
+    final double letterRadius = ResponsiveHelper.getResponsiveLetterSize(
+      context,
+    );
     final int total = letters.length;
     List<Widget> widgets = [];
 
@@ -613,7 +903,8 @@ class _GameScreenState extends State<GameScreen> {
               child: Text(
                 letters[i],
                 style: TextStyle(
-                  fontSize: 36,
+                  fontSize:
+                      letterRadius * 0.7, // Adjusted for better readability
                   fontWeight: FontWeight.w900,
                   color: selectedIndexes.contains(i)
                       ? Colors.white
@@ -629,214 +920,12 @@ class _GameScreenState extends State<GameScreen> {
     return widgets;
   }
 
-  void _showSettingsDialog(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            width: 320,
-            height: 450, // Increased height for mode switching
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF5a67d8), // Purple blue at top
-                  Color(0xFF667eea), // Lighter purple blue
-                  Color(0xFF764ba2), // Deep purple at bottom
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF4c51bf), // Dark purple border
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Close button
-                Positioned(
-                  top: 15,
-                  right: 15,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        color: Colors.white24,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      // Title
-                      const Text(
-                        'AYARLAR',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${viewModel.modeInfo.toUpperCase()} - BÖLÜM ${viewModel.game.currentLevel}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      // Mode switching buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildSettingsButton(
-                            icon: Icons.language,
-                            label: 'ALMANCA',
-                            iconColor: viewModel.currentMode == GameMode.german
-                                ? const Color(0xFF4c51bf)
-                                : Colors.white,
-                            backgroundColor:
-                                viewModel.currentMode == GameMode.german
-                                ? Colors.white
-                                : Colors.white24,
-                            onTap: () async {
-                              await SoundService.playButtonClick();
-                              await viewModel.switchMode(GameMode.german);
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          _buildSettingsButton(
-                            icon: Icons.abc,
-                            label: 'LV',
-                            iconColor: viewModel.currentMode == GameMode.lv
-                                ? const Color(0xFF4c51bf)
-                                : Colors.white,
-                            backgroundColor:
-                                viewModel.currentMode == GameMode.lv
-                                ? Colors.white
-                                : Colors.white24,
-                            onTap: () async {
-                              await SoundService.playButtonClick();
-                              await viewModel.switchMode(GameMode.lv);
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      // Settings buttons row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildSettingsButton(
-                            icon: Icons.home,
-                            label: 'MENÜ',
-                            iconColor: const Color(0xFF4c51bf),
-                            backgroundColor: Colors.white,
-                            onTap: () async {
-                              await SoundService.playButtonClick();
-                              Navigator.of(context).pop(); // Close dialog
-                              Navigator.of(
-                                context,
-                              ).pop(); // Go back to main menu
-                            },
-                          ),
-                          _buildSettingsButton(
-                            icon: SoundService.isSoundEnabled
-                                ? Icons.volume_up
-                                : Icons.volume_off,
-                            label: 'SES',
-                            iconColor: Colors.white,
-                            backgroundColor: Colors.white24,
-                            onTap: () async {
-                              await SoundService.toggleSound();
-                              Navigator.of(context).pop(); // Close dialog
-                              _showSettingsDialog(context); // Reopen to refresh
-                            },
-                          ),
-                          _buildSettingsButton(
-                            icon: Icons.music_note,
-                            label: 'MÜZİK',
-                            iconColor: Colors.white,
-                            backgroundColor: Colors.white24,
-                            onTap: () async {
-                              await SoundService.playButtonClick();
-                              // Toggle music
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      // Help section
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.mail_outline,
-                              color: Color(0xFF4c51bf),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'YARDIM VE DESTEK',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildSettingsButton({
     required IconData icon,
     required String label,
     required Color iconColor,
     required Color backgroundColor,
+    required BuildContext context,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -844,8 +933,18 @@ class _GameScreenState extends State<GameScreen> {
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: ResponsiveHelper.getResponsiveIconSize(
+              context,
+              mobile: 60.0,
+              tablet: 80.0,
+              desktop: 100.0,
+            ),
+            height: ResponsiveHelper.getResponsiveIconSize(
+              context,
+              mobile: 60.0,
+              tablet: 80.0,
+              desktop: 100.0,
+            ),
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
@@ -856,13 +955,22 @@ class _GameScreenState extends State<GameScreen> {
                 width: 2,
               ),
             ),
-            child: Icon(icon, color: iconColor, size: 28),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: ResponsiveHelper.getResponsiveIconSize(
+                context,
+                mobile: 28.0,
+                tablet: 36.0,
+                desktop: 44.0,
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(context),
               fontWeight: FontWeight.bold,
               color: backgroundColor == Colors.white
                   ? const Color(0xFF4c51bf)
@@ -873,62 +981,6 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
-}
-
-// Custom painter for Egyptian landscape
-class EgyptianLandscapePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-
-    // Draw sphinx silhouette
-    path.moveTo(size.width * 0.3, size.height);
-    path.lineTo(size.width * 0.3, size.height * 0.7);
-    path.quadraticBezierTo(
-      size.width * 0.35,
-      size.height * 0.6,
-      size.width * 0.4,
-      size.height * 0.65,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.45,
-      size.height * 0.55,
-      size.width * 0.5,
-      size.height * 0.6,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.55,
-      size.height * 0.7,
-      size.width * 0.6,
-      size.height * 0.75,
-    );
-    path.lineTo(size.width * 0.65, size.height);
-    path.close();
-
-    // Draw pyramids
-    final pyramidPath = Path();
-    // Left pyramid
-    pyramidPath.moveTo(size.width * 0.1, size.height);
-    pyramidPath.lineTo(size.width * 0.15, size.height * 0.6);
-    pyramidPath.lineTo(size.width * 0.25, size.height);
-    pyramidPath.close();
-
-    // Right pyramid
-    pyramidPath.moveTo(size.width * 0.75, size.height);
-    pyramidPath.lineTo(size.width * 0.8, size.height * 0.5);
-    pyramidPath.lineTo(size.width * 0.9, size.height);
-    pyramidPath.close();
-
-    canvas.drawPath(path, paint);
-    canvas.drawPath(pyramidPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 // Custom painter for drawing lines between letters

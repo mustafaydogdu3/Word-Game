@@ -54,29 +54,6 @@ class LVWord {
   }
 }
 
-class LVIntersection {
-  final String word1;
-  final int index1;
-  final String word2;
-  final int index2;
-
-  LVIntersection({
-    required this.word1,
-    required this.index1,
-    required this.word2,
-    required this.index2,
-  });
-
-  factory LVIntersection.fromJson(Map<String, dynamic> json) {
-    return LVIntersection(
-      word1: json['word1'],
-      index1: json['index1'],
-      word2: json['word2'],
-      index2: json['index2'],
-    );
-  }
-}
-
 class LVLevel {
   final int level;
   final String theme;
@@ -84,7 +61,6 @@ class LVLevel {
   final List<int> gridSize;
   final List<String> letters;
   final List<LVWord> words;
-  final List<LVIntersection> intersections;
 
   LVLevel({
     required this.level,
@@ -93,7 +69,6 @@ class LVLevel {
     required this.gridSize,
     required this.letters,
     required this.words,
-    required this.intersections,
   });
 
   factory LVLevel.fromJson(Map<String, dynamic> json) {
@@ -104,9 +79,6 @@ class LVLevel {
       gridSize: List<int>.from(json['gridSize']),
       letters: List<String>.from(json['letters']),
       words: (json['words'] as List).map((w) => LVWord.fromJson(w)).toList(),
-      intersections: (json['intersections'] as List)
-          .map((i) => LVIntersection.fromJson(i))
-          .toList(),
     );
   }
 }
@@ -182,26 +154,38 @@ class WordService {
     if (_isLoaded) return;
 
     try {
-      // Load all levels (1-10) from the new German levels file
-      final String response = await rootBundle.loadString(
-        'assets/json/levels_final_de_1_to_10.json',
-      );
-      final Map<String, dynamic> data = json.decode(response);
-      final List<dynamic> levelsJson = data['levels'];
+      print('Loading German words...');
+      // Try to load German levels, but don't fail if file doesn't exist
+      try {
+        final String response = await rootBundle.loadString(
+          'assets/json/levels_final_de_1_to_10.json',
+        );
+        final Map<String, dynamic> data = json.decode(response);
+        final List<dynamic> levelsJson = data['levels'];
 
-      _levels = levelsJson.map((json) => Level.fromJson(json)).toList();
-
-      // Flatten all words from all levels for backward compatibility
-      _words = _levels.expand((level) => level.words).toList();
+        _levels = levelsJson.map((json) => Level.fromJson(json)).toList();
+        _words = _levels.expand((level) => level.words).toList();
+        print('German words loaded successfully: ${_words.length} words');
+      } catch (e) {
+        print('German JSON file not found or invalid, using empty data: $e');
+        _levels = [];
+        _words = [];
+      }
 
       _isLoaded = true;
     } catch (e) {
       print('Error loading words: $e');
+      _levels = [];
+      _words = [];
+      _isLoaded = true;
     }
   }
 
   static Future<void> loadLVWords() async {
-    if (_isLVLoaded) return;
+    if (_isLVLoaded) {
+      print('LV words already loaded, skipping...');
+      return;
+    }
 
     try {
       print('Loading LV words...');
@@ -214,14 +198,32 @@ class WordService {
       final List<dynamic> levelsJson = json.decode(response);
       print('LV JSON decoded, levels count: ${levelsJson.length}');
 
-      _lvLevels = levelsJson.map((json) => LVLevel.fromJson(json)).toList();
+      _lvLevels = levelsJson.map((json) {
+        try {
+          return LVLevel.fromJson(json);
+        } catch (e) {
+          print('Error parsing LV level: $e');
+          rethrow;
+        }
+      }).toList();
       print('LV levels parsed: ${_lvLevels.length}');
+
+      // Verify the first level
+      if (_lvLevels.isNotEmpty) {
+        final firstLevel = _lvLevels.first;
+        print(
+          'First LV level: ${firstLevel.theme}, letters: ${firstLevel.letters}, words: ${firstLevel.words.map((w) => w.word).toList()}',
+        );
+      }
 
       _isLVLoaded = true;
       print('LV words loaded successfully');
     } catch (e) {
       print('Error loading LV words: $e');
       print('Stack trace: ${StackTrace.current}');
+      // Don't rethrow, just set empty list
+      _lvLevels = [];
+      _isLVLoaded = true;
     }
   }
 
@@ -331,25 +333,21 @@ class WordService {
     List<String> targetWords = level.words.map((w) => w.word).toList();
     print('Target words: $targetWords');
 
-    // Convert LV positions to WordPosition format
+    // Convert manual positions from JSON to WordPosition format
     Map<String, List<WordPosition>> wordPositions = {};
-    for (LVWord word in level.words) {
-      wordPositions[word.word] = word.positions
+    for (LVWord lvWord in level.words) {
+      wordPositions[lvWord.word] = lvWord.positions
           .map((pos) => WordPosition(row: pos[0], col: pos[1]))
           .toList();
     }
-    print('Word positions converted for ${wordPositions.length} words');
+    print('Manual word positions loaded for ${wordPositions.length} words');
 
-    // Convert LV intersections to Intersection format
-    List<Intersection> intersections = level.intersections.map((lvInt) {
-      return Intersection(
-        words: [lvInt.word1, lvInt.word2],
-        commonLetter: level.letters.first, // This might need adjustment
-        positionInFirst: lvInt.index1,
-        positionInSecond: lvInt.index2,
-      );
-    }).toList();
-    print('Intersections converted: ${intersections.length}');
+    // No intersections needed for manual placement
+    List<Intersection> intersections = [];
+    print('Manual placement - no intersections needed');
+
+    // Use grid size directly from JSON
+    List<int> gridSize = level.gridSize;
 
     final puzzle = GamePuzzle(
       letters: List.from(level.letters)..shuffle(),
@@ -358,10 +356,12 @@ class WordService {
       theme: level.theme,
       wordPositions: wordPositions,
       intersections: intersections,
-      gridSize: level.gridSize,
+      gridSize: gridSize,
     );
 
-    print('LV puzzle generated successfully with grid size: ${level.gridSize}');
+    print(
+      'Manual LV puzzle generated successfully with grid size: $gridSize (letters.length + 1 = ${level.letters.length} + 1)',
+    );
     return puzzle;
   }
 
