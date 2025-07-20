@@ -1117,26 +1117,70 @@ class _GameScreenState extends State<GameScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Main circle background
+                    // Main circle background with transparency
                     Container(
-                      width:
-                          ResponsiveHelper.getResponsiveLetterCircleSize(
-                            context,
-                          ) *
-                          0.8,
-                      height:
-                          ResponsiveHelper.getResponsiveLetterCircleSize(
-                            context,
-                          ) *
-                          0.8,
+                      width: ResponsiveHelper.getResponsiveLetterCircleSize(
+                        context,
+                      ),
+                      height: ResponsiveHelper.getResponsiveLetterCircleSize(
+                        context,
+                      ),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 15,
-                            spreadRadius: 2,
+                        color: Colors.white.withOpacity(0.6), // Daha beyaz
+                      ),
+                      child: Stack(
+                        children: [
+                          ..._buildCircleLetters(letters, selectedIndexes),
+                          // Shuffle button in center
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await SoundService.playShuffle();
+                                  viewModel.shuffleLetters();
+                                },
+                                child: Container(
+                                  width:
+                                      ResponsiveHelper.getResponsiveShuffleButtonSize(
+                                        context,
+                                      ) *
+                                      0.5, // Much smaller shuffle button like in image
+                                  height:
+                                      ResponsiveHelper.getResponsiveShuffleButtonSize(
+                                        context,
+                                      ) *
+                                      0.5, // Much smaller shuffle button like in image
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey.shade400.withOpacity(
+                                      0.8,
+                                    ),
+                                    border: Border.all(
+                                      color: Colors.grey.shade500,
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 3,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.shuffle,
+                                    color: Colors.grey.shade700,
+                                    size:
+                                        ResponsiveHelper.getResponsiveIconSize(
+                                          context,
+                                        ) *
+                                        0.6, // Smaller icon
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1154,47 +1198,6 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                         painter: LinePainter(linePoints),
                       ),
-                    // Letters around the circle
-                    ..._buildCircleLetters(letters, selectedIndexes),
-                    // Shuffle button in center
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: GestureDetector(
-                          onTap: () async {
-                            await SoundService.playShuffle();
-                            viewModel.shuffleLetters();
-                          },
-                          child: Container(
-                            width:
-                                ResponsiveHelper.getResponsiveShuffleButtonSize(
-                                  context,
-                                ),
-                            height:
-                                ResponsiveHelper.getResponsiveShuffleButtonSize(
-                                  context,
-                                ),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.shuffle,
-                              color: Colors.black54,
-                              size: ResponsiveHelper.getResponsiveIconSize(
-                                context,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -1259,10 +1262,9 @@ class _GameScreenState extends State<GameScreen> {
       context,
     );
     final double center = circleSize / 2;
-    final double radius = circleSize * 0.35;
-    final double letterRadius = ResponsiveHelper.getResponsiveLetterSize(
-      context,
-    );
+    final double radius = circleSize * 0.32;
+    final double letterRadius =
+        ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
     final int total = letters.length;
     List<Widget> widgets = [];
 
@@ -1271,6 +1273,8 @@ class _GameScreenState extends State<GameScreen> {
       final double x = center + radius * cos(angle) - letterRadius;
       final double y = center + radius * sin(angle) - letterRadius;
 
+      final bool isSelected = selectedIndexes.contains(i);
+
       widgets.add(
         Positioned(
           left: x,
@@ -1278,27 +1282,35 @@ class _GameScreenState extends State<GameScreen> {
           child: Container(
             width: letterRadius * 2,
             height: letterRadius * 2,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selectedIndexes.contains(i) ? Colors.orange : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
+            decoration: isSelected
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.orange.shade600.withOpacity(0.85),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  )
+                : null, // Seçilmediyse arka plan ve border yok
             child: Center(
               child: Text(
                 letters[i],
                 style: TextStyle(
-                  fontSize:
-                      letterRadius * 0.7, // Adjusted for better readability
+                  fontSize: letterRadius * 1.0,
                   fontWeight: FontWeight.w900,
-                  color: selectedIndexes.contains(i)
-                      ? Colors.white
-                      : Colors.black,
+                  color: isSelected ? Colors.white : Colors.black87,
+                  shadows: isSelected
+                      ? [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: Offset(1, 1),
+                            blurRadius: 2,
+                          ),
+                        ]
+                      : null,
                 ),
               ),
             ),
@@ -1371,9 +1383,16 @@ class _GameScreenState extends State<GameScreen> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withOpacity(0.7),
                         width: 2,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Icon(
                       icon,
