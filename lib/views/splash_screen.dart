@@ -1,71 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:word_game/utils/responsive_helper.dart';
+import 'package:word_game/viewmodels/game_view_model.dart';
 
-import '../utils/responsive_helper.dart';
-import '../viewmodels/game_view_model.dart';
 import 'main_menu_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  _SplashScreenState createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _progressAnimation;
+  late Animation<double> _textPositionAnimation;
 
   @override
   void initState() {
     super.initState();
-    // Sabit animasyon süreleri kullan (initState'de MediaQuery'ye erişemeyiz)
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
-
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    // Progress bar animasyonu (0'dan 1'e)
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeInOut),
+      ),
     );
 
-    _startAnimations();
-    _initializeGame();
+    // Yazının main menu'deki konumuna doğru kayma animasyonu
+    _textPositionAnimation =
+        Tween<double>(
+          begin: 0.0, // Başlangıç pozisyonu (orta)
+          end: -0.35, // Main menu'deki üst konuma doğru yukarı kayma
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.4, 1.0, curve: Curves.easeInOut),
+          ),
+        );
+
+    _startLoading();
   }
 
-  void _startAnimations() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _fadeController.forward();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _scaleController.forward();
-  }
+  void _startLoading() async {
+    // GameViewModel'i initialize et
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    await viewModel.initializeGame();
 
-  Future<void> _initializeGame() async {
-    // Wait a bit to ensure the widget is fully built
-    await Future.delayed(const Duration(milliseconds: 100));
+    // Animasyonu başlat
+    _animationController.forward();
 
-    if (mounted) {
-      final viewModel = Provider.of<GameViewModel>(context, listen: false);
-      await viewModel.initializeGame();
-    }
-
-    // Wait for animations to complete
+    // Animasyon tamamen bittiğinde main menu'ye geç
     await Future.delayed(const Duration(milliseconds: 3000));
 
     if (mounted) {
-      Navigator.of(context).pushReplacement(
+      Navigator.pushReplacement(
+        context,
         MaterialPageRoute(builder: (context) => const MainMenuScreen()),
       );
     }
@@ -73,296 +72,133 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape = ResponsiveHelper.isLandscape(context);
-    final isTablet = ResponsiveHelper.isTablet(context);
-    final isDesktop = ResponsiveHelper.isDesktop(context);
-    final isLargeDesktop = ResponsiveHelper.isLargeDesktop(context);
-    final shouldUseHorizontalLayout =
-        ResponsiveHelper.shouldUseHorizontalLayout(context);
-
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF87CEEB), // Sky blue at top
-              Color(0xFFFFB6C1), // Light pink in middle
-              Color(0xFFFFE4E1), // Misty rose at bottom
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: [0.0, 0.7, 1.0],
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/main_menu.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: SafeArea(
-          child: shouldUseHorizontalLayout
-              ? _buildHorizontalLayout(context)
-              : _buildVerticalLayout(context),
-        ),
-      ),
-    );
-  }
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // WORD GAME yazısı (main menu'deki ile aynı stil)
+              AnimatedBuilder(
+                animation: _textPositionAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(
+                      0,
+                      _textPositionAnimation.value *
+                          MediaQuery.of(context).size.height,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'WORD',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveTitleFontSize(
+                                  context,
+                                  mobile: 32.0,
+                                  tablet: 42.0,
+                                  desktop: 52.0,
+                                ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.7),
+                                offset: const Offset(3, 3),
+                                blurRadius: 8,
+                              ),
+                              Shadow(
+                                color: Colors.blue.withOpacity(0.5),
+                                offset: const Offset(1, 1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          'GAME',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveTitleFontSize(
+                                  context,
+                                  mobile: 32.0,
+                                  tablet: 42.0,
+                                  desktop: 52.0,
+                                ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.7),
+                                offset: const Offset(3, 3),
+                                blurRadius: 8,
+                              ),
+                              Shadow(
+                                color: Colors.orange.withOpacity(0.5),
+                                offset: const Offset(1, 1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
 
-  Widget _buildVerticalLayout(BuildContext context) {
-    return Center(
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Padding(
-            padding: ResponsiveHelper.getResponsiveMargin(context),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // App icon or logo placeholder
-                _buildAppIcon(context),
+              SizedBox(
+                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
+              ),
 
-                SizedBox(
-                  height: ResponsiveHelper.getResponsiveLargeSpacing(context),
-                ),
-
-                // App title
-                _buildAppTitle(context),
-
-                SizedBox(
-                  height: ResponsiveHelper.getResponsiveSpacing(context),
-                ),
-
-                // Subtitle
-                _buildSubtitle(context),
-
-                SizedBox(
-                  height: ResponsiveHelper.getResponsiveExtraLargeSpacing(
-                    context,
-                  ),
-                ),
-
-                // Loading indicator
-                _buildLoadingIndicator(context),
-
-                SizedBox(
-                  height: ResponsiveHelper.getResponsiveLargeSpacing(context),
-                ),
-
-                // Loading text
-                _buildLoadingText(context),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHorizontalLayout(BuildContext context) {
-    return Center(
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Padding(
-            padding: ResponsiveHelper.getResponsiveMargin(context),
-            child: Row(
-              children: [
-                // Left side - App icon and title
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildAppIcon(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsiveLargeSpacing(
-                          context,
+              // Progress bar
+              AnimatedBuilder(
+                animation: _progressAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width:
+                        ResponsiveHelper.getResponsiveButtonWidth(context) *
+                        0.8,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: _progressAnimation.value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue, Colors.green],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(3),
                         ),
                       ),
-                      _buildAppTitle(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
-                      _buildSubtitle(context),
-                    ],
-                  ),
-                ),
-
-                SizedBox(
-                  width: ResponsiveHelper.getResponsiveExtraLargeSpacing(
-                    context,
-                  ),
-                ),
-
-                // Right side - Loading
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildLoadingIndicator(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsiveLargeSpacing(
-                          context,
-                        ),
-                      ),
-                      _buildLoadingText(context),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppIcon(BuildContext context) {
-    return Container(
-      width: ResponsiveHelper.getResponsiveIconSize(
-        context,
-        mobile: 80.0,
-        tablet: 100.0,
-        desktop: 120.0,
-      ),
-      height: ResponsiveHelper.getResponsiveIconSize(
-        context,
-        mobile: 80.0,
-        tablet: 100.0,
-        desktop: 120.0,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: Icon(
-        Icons.psychology,
-        size: ResponsiveHelper.getResponsiveIconSize(
-          context,
-          mobile: 40.0,
-          tablet: 50.0,
-          desktop: 60.0,
-        ),
-        color: Colors.purple,
-      ),
-    );
-  }
-
-  Widget _buildAppTitle(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'KELİME',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-              context,
-              mobile: 28.0,
-              tablet: 36.0,
-              desktop: 44.0,
-            ),
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                offset: const Offset(2, 2),
-                blurRadius: 4,
-                color: Colors.black.withOpacity(0.3),
+                    ),
+                  );
+                },
               ),
             ],
           ),
         ),
-        Text(
-          'OYUNU',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-              context,
-              mobile: 28.0,
-              tablet: 36.0,
-              desktop: 44.0,
-            ),
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                offset: const Offset(2, 2),
-                blurRadius: 4,
-                color: Colors.black.withOpacity(0.3),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubtitle(BuildContext context) {
-    return Text(
-      'Kelime Oyunu',
-      style: TextStyle(
-        fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(context),
-        color: Colors.white.withOpacity(0.9),
-        fontWeight: FontWeight.w500,
-        shadows: [
-          Shadow(
-            offset: const Offset(1, 1),
-            blurRadius: 2,
-            color: Colors.black.withOpacity(0.3),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator(BuildContext context) {
-    return SizedBox(
-      width: ResponsiveHelper.getResponsiveIconSize(
-        context,
-        mobile: 30.0,
-        tablet: 35.0,
-        desktop: 40.0,
-      ),
-      height: ResponsiveHelper.getResponsiveIconSize(
-        context,
-        mobile: 30.0,
-        tablet: 35.0,
-        desktop: 40.0,
-      ),
-      child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        strokeWidth: ResponsiveHelper.isMobile(context) ? 3.0 : 4.0,
-      ),
-    );
-  }
-
-  Widget _buildLoadingText(BuildContext context) {
-    return Text(
-      'Yükleniyor...',
-      style: TextStyle(
-        fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
-        color: Colors.white.withOpacity(0.8),
-        fontWeight: FontWeight.w500,
-        shadows: [
-          Shadow(
-            offset: const Offset(1, 1),
-            blurRadius: 2,
-            color: Colors.black.withOpacity(0.3),
-          ),
-        ],
       ),
     );
   }
