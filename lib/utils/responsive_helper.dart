@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class ResponsiveHelper {
@@ -298,6 +300,90 @@ class ResponsiveHelper {
       final heightBased = (availableHeight * 0.04).clamp(35.0, 55.0);
       return widthBased < heightBased ? widthBased : heightBased;
     }
+  }
+
+  // Dynamic grid cell size based on gridSize from JSON
+  static double getDynamicGridCellSize(
+    BuildContext context,
+    int gridCols,
+    int gridRows,
+  ) {
+    final availableWidth = getAvailableWidth(context);
+    final availableHeight = getAvailableHeight(context);
+
+    // Calculate the maximum grid size (rows or columns)
+    final maxGridDimension = max(gridCols, gridRows);
+
+    // Base cell size calculation with dynamic scaling
+    double baseCellSize;
+
+    if (isMobile(context)) {
+      // For mobile devices
+      if (maxGridDimension <= 3) {
+        // Small grids (3x3 or smaller) - larger cells
+        baseCellSize = (availableWidth * 0.18).clamp(50.0, 80.0);
+      } else if (maxGridDimension <= 4) {
+        // Medium grids (4x4) - medium cells
+        baseCellSize = (availableWidth * 0.15).clamp(45.0, 65.0);
+      } else if (maxGridDimension <= 5) {
+        // Large grids (5x5) - smaller cells
+        baseCellSize = (availableWidth * 0.12).clamp(40.0, 55.0);
+      } else {
+        // Very large grids (6x6 or larger) - very small cells
+        baseCellSize = (availableWidth * 0.10).clamp(35.0, 50.0);
+      }
+    } else if (isTablet(context)) {
+      // For tablet devices
+      if (maxGridDimension <= 3) {
+        baseCellSize = (availableWidth * 0.15).clamp(60.0, 90.0);
+      } else if (maxGridDimension <= 4) {
+        baseCellSize = (availableWidth * 0.12).clamp(55.0, 80.0);
+      } else if (maxGridDimension <= 5) {
+        baseCellSize = (availableWidth * 0.10).clamp(50.0, 75.0);
+      } else {
+        baseCellSize = (availableWidth * 0.08).clamp(45.0, 65.0);
+      }
+    } else {
+      // For desktop devices
+      if (maxGridDimension <= 3) {
+        baseCellSize = (availableWidth * 0.10).clamp(70.0, 110.0);
+      } else if (maxGridDimension <= 4) {
+        baseCellSize = (availableWidth * 0.09).clamp(65.0, 95.0);
+      } else if (maxGridDimension <= 5) {
+        baseCellSize = (availableWidth * 0.08).clamp(60.0, 85.0);
+      } else {
+        baseCellSize = (availableWidth * 0.07).clamp(55.0, 80.0);
+      }
+    }
+
+    // Calculate total grid dimensions
+    double totalGridWidth = gridCols * baseCellSize;
+    double totalGridHeight = gridRows * baseCellSize;
+
+    // Get available space for grid (considering letter wheel at bottom)
+    double maxGridWidth = availableWidth * 0.9;
+    double maxGridHeight =
+        availableHeight * 0.5; // Leave space for letter wheel
+
+    // Calculate scale factor if grid is too large
+    double scaleFactor = 1.0;
+    if (totalGridWidth > maxGridWidth || totalGridHeight > maxGridHeight) {
+      double widthScale = maxGridWidth / totalGridWidth;
+      double heightScale = maxGridHeight / totalGridHeight;
+      scaleFactor = min(widthScale, heightScale);
+    }
+
+    // Apply scale factor and ensure minimum size
+    double finalCellSize = (baseCellSize * scaleFactor).clamp(
+      30.0,
+      baseCellSize,
+    );
+
+    print(
+      'Grid: ${gridCols}x$gridRows, Base: ${baseCellSize.toStringAsFixed(1)}, Final: ${finalCellSize.toStringAsFixed(1)}, Scale: ${scaleFactor.toStringAsFixed(2)}',
+    );
+
+    return finalCellSize;
   }
 
   static double getResponsiveLetterCircleSize(BuildContext context) {

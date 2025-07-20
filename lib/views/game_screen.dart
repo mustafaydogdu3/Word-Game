@@ -21,6 +21,42 @@ class _GameScreenState extends State<GameScreen> {
   List<int> selectedIndexes = [];
   List<Offset> linePoints = [];
   bool isPanning = false;
+  bool _showLevelCompleteOverlay = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to game completion
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = Provider.of<GameViewModel>(context, listen: false);
+      viewModel.addListener(_onGameStateChanged);
+    });
+  }
+
+  @override
+  void dispose() {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    viewModel.removeListener(_onGameStateChanged);
+    super.dispose();
+  }
+
+  void _onGameStateChanged() {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    if (viewModel.game.isCompleted && !_showLevelCompleteOverlay) {
+      setState(() {
+        _showLevelCompleteOverlay = true;
+      });
+
+      // Hide overlay after 2 seconds and let the view model handle level transition
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _showLevelCompleteOverlay = false;
+          });
+        }
+      });
+    }
+  }
 
   void _handlePanStart(Offset position, BuildContext context) {
     final letters = Provider.of<GameViewModel>(
@@ -436,41 +472,152 @@ class _GameScreenState extends State<GameScreen> {
         .join();
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF4a4fb5), // Deep blue at top
-              Color(0xFF7b5fb0), // Purple middle
-              Color(0xFFf4a261), // Orange/yellow at bottom
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: [0.0, 0.6, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Top section with game info
-              _buildTopSection(context, viewModel),
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF4a4fb5), // Deep blue at top
+                  Color(0xFF7b5fb0), // Purple middle
+                  Color(0xFFf4a261), // Orange/yellow at bottom
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, 0.6, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Top section with game info
+                  _buildTopSection(context, viewModel),
 
-              // Main game area
-              Expanded(
-                child: _buildGameArea(
-                  context,
-                  viewModel,
-                  grid,
-                  gridRows,
-                  gridCols,
-                  selectedWord,
+                  // Main game area
+                  Expanded(
+                    child: _buildGameArea(
+                      context,
+                      viewModel,
+                      grid,
+                      gridRows,
+                      gridCols,
+                      selectedWord,
+                    ),
+                  ),
+
+                  // Bottom section with letter circle
+                  _buildBottomSection(context, viewModel, letters),
+                ],
+              ),
+            ),
+          ),
+
+          // Level completion overlay
+          if (_showLevelCompleteOverlay)
+            _buildLevelCompleteOverlay(context, viewModel),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLevelCompleteOverlay(
+    BuildContext context,
+    GameViewModel viewModel,
+  ) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.all(
+            ResponsiveHelper.getResponsiveLargeSpacing(context),
+          ),
+          margin: EdgeInsets.all(
+            ResponsiveHelper.getResponsivePadding(context),
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.green.shade400,
+                Colors.green.shade600,
+                Colors.green.shade800,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success icon
+              Container(
+                width: ResponsiveHelper.getResponsiveIconSize(context) * 2,
+                height: ResponsiveHelper.getResponsiveIconSize(context) * 2,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: ResponsiveHelper.getResponsiveIconSize(context) * 1.5,
                 ),
               ),
 
-              // Bottom section with letter circle
-              _buildBottomSection(context, viewModel, letters),
+              SizedBox(
+                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
+              ),
+
+              // Level completed text
+              Text(
+                'SEVİYE TAMAMLANDI!',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
+                    context,
+                  ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 2.0,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+              // Level info
+              Text(
+                'Seviye ${viewModel.game.currentLevel}',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
+                    context,
+                  ),
+                  color: Colors.white.withOpacity(0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+              // Next level info
+              Text(
+                'Sonraki seviyeye geçiliyor...',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -690,9 +837,15 @@ class _GameScreenState extends State<GameScreen> {
     int gridWidth = maxCol - minCol + 1;
     int gridHeight = maxRow - minRow + 1;
 
-    // Calculate cell size and spacing with better responsive logic
-    double cellSize = ResponsiveHelper.getResponsiveGridCellSize(context);
-    double cellSpacing = ResponsiveHelper.getResponsiveSpacing(context) * 0.5;
+    // Use dynamic grid cell size based on gridSize from JSON
+    double cellSize = ResponsiveHelper.getDynamicGridCellSize(
+      context,
+      gridWidth,
+      gridHeight,
+    );
+    double cellSpacing =
+        ResponsiveHelper.getResponsiveSpacing(context) *
+        0.3; // Reduced spacing for better fit
     double totalCellSize = cellSize + cellSpacing;
 
     // Calculate total grid dimensions
@@ -707,13 +860,13 @@ class _GameScreenState extends State<GameScreen> {
 
     // Calculate max grid size based on available space
     double maxGridWidth = shouldUseHorizontalLayout
-        ? availableWidth * 0.6
-        : availableWidth * 0.9;
+        ? availableWidth * 0.8
+        : availableWidth * 0.95;
     double maxGridHeight = shouldUseHorizontalLayout
-        ? availableHeight * 0.7
-        : availableHeight * 0.5;
+        ? availableHeight * 0.6
+        : availableHeight * 0.55;
 
-    // Scale grid if it's too large
+    // Scale grid if it's too large (additional safety scaling)
     double scaleFactor = 1.0;
     if (totalGridWidth > maxGridWidth || totalGridHeight > maxGridHeight) {
       double widthScale = maxGridWidth / totalGridWidth;
@@ -738,9 +891,14 @@ class _GameScreenState extends State<GameScreen> {
         maxHeight: maxGridHeight,
       ),
       child: Center(
-        child: SizedBox(
+        child: Container(
           width: scaledTotalGridWidth,
           height: scaledTotalGridHeight,
+          decoration: BoxDecoration(
+            // Optional: Add a subtle background for debugging
+            // color: Colors.black.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Stack(
             children: allPositions.map((positionKey) {
               List<String> coords = positionKey.split(',');
@@ -769,18 +927,42 @@ class _GameScreenState extends State<GameScreen> {
                   width: scaledCellSize,
                   height: scaledCellSize,
                   decoration: BoxDecoration(
-                    color: isPartOfFoundWord
-                        ? Colors.green.withOpacity(0.8)
-                        : Colors.white.withOpacity(0.9),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isPartOfFoundWord
+                          ? [
+                              Colors.green.shade400,
+                              Colors.green.shade600,
+                              Colors.green.shade800,
+                            ]
+                          : [
+                              Colors.white,
+                              Colors.grey.shade100,
+                              Colors.grey.shade200,
+                            ],
+                    ),
                     borderRadius: BorderRadius.circular(
                       ResponsiveHelper.getResponsiveBorderRadius(context) *
                           scaleFactor,
                     ),
+                    border: Border.all(
+                      color: isPartOfFoundWord
+                          ? Colors.green.shade300
+                          : Colors.grey.shade300,
+                      width: 1.5 * scaleFactor,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4 * scaleFactor,
-                        offset: Offset(0, 2 * scaleFactor),
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 6 * scaleFactor,
+                        offset: Offset(0, 3 * scaleFactor),
+                        spreadRadius: 1 * scaleFactor,
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.1),
+                        blurRadius: 2 * scaleFactor,
+                        offset: Offset(0, -1 * scaleFactor),
                       ),
                     ],
                   ),
@@ -791,12 +973,18 @@ class _GameScreenState extends State<GameScreen> {
                         color: isPartOfFoundWord
                             ? Colors.white
                             : Colors.black87,
-                        fontSize:
-                            ResponsiveHelper.getResponsiveBodyFontSize(
-                              context,
-                            ) *
-                            scaleFactor,
+                        fontSize: (scaledCellSize * 0.6).clamp(16.0, 32.0),
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        shadows: isPartOfFoundWord
+                            ? [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: Offset(1, 1),
+                                  blurRadius: 2,
+                                ),
+                              ]
+                            : null,
                       ),
                     ),
                   ),

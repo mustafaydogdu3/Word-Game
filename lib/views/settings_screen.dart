@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/sound_service.dart';
+import '../utils/responsive_helper.dart';
+import '../viewmodels/game_view_model.dart';
 import 'main_menu_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -67,6 +71,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } catch (e) {
       print('Ana menü navigasyon hatası: $e');
+    }
+  }
+
+  Future<void> _resetProgress() async {
+    // Show confirmation dialog
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getResponsiveBorderRadius(context),
+            ),
+          ),
+          title: Text(
+            'Levelleri Sıfırla?',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Tüm ilerleme kaybedilecek ve Level 1\'den başlayacaksınız. Emin misiniz?',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'İptal',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(
+                'Sıfırla',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear(); // Clear all saved progress
+
+      // Reset game view model
+      final viewModel = Provider.of<GameViewModel>(context, listen: false);
+      await viewModel.resetProgress();
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Leveller başarıyla sıfırlandı! Level 1\'den başlayabilirsiniz.',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              ),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
   }
 
@@ -165,6 +244,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 isEnabled: _isMusicEnabled,
                 onTap: _toggleMusic,
               ),
+
+              const SizedBox(height: 16),
+
+              // Levelleri Sıfırla butonu
+              _buildResetButton(),
             ],
           ),
         ),
@@ -289,6 +373,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResetButton() {
+    return Container(
+      width: double.infinity,
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade200.withOpacity(0.8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: _resetProgress,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              // İkon container
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.refresh,
+                  color: Colors.red.shade600,
+                  size: 20,
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Metin içeriği
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Levelleri Sıfırla',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tüm seviyeleri baştan başla',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Arrow icon
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey.shade400,
+                size: 16,
               ),
             ],
           ),

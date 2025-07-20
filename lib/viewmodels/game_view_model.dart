@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/game_model.dart';
+import '../services/sound_service.dart';
 import '../services/word_service.dart';
 
 enum GameMode { german, lv }
@@ -225,9 +226,13 @@ class GameViewModel extends ChangeNotifier {
         // Check if level is completed
         if (_game.isCompleted) {
           print('Level completed! Moving to next level...');
-          // Move to next level after a short delay
-          Future.delayed(Duration(seconds: 2), () {
-            _moveToNextLevel();
+          // Play level complete sound
+          SoundService.playLevelComplete();
+          // Use post-frame callback to ensure UI updates before level transition
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!_isDisposed) {
+              _moveToNextLevel();
+            }
           });
         }
 
@@ -241,19 +246,39 @@ class GameViewModel extends ChangeNotifier {
   }
 
   void _moveToNextLevel() async {
+    if (_isDisposed) return;
+
     int nextLevel = _game.currentLevel + 1;
     int maxLevels = _currentMode == GameMode.german
         ? WordService.totalLevels
         : WordService.totalLVLevels;
 
-    if (nextLevel <= maxLevels) {
-      // Save progress before moving to next level
-      await _saveCurrentLevel(nextLevel);
-      _generatePuzzleForLevel(nextLevel);
-    } else {
-      // Game completed! Show celebration or restart
-      await _saveCurrentLevel(1); // Reset to level 1
-      _generatePuzzleForLevel(1); // Restart from level 1
+    print('Moving to next level: $nextLevel (max: $maxLevels)');
+
+    try {
+      if (nextLevel <= maxLevels) {
+        // Save progress before moving to next level
+        await _saveCurrentLevel(nextLevel);
+        print('Progress saved for level $nextLevel');
+
+        // Generate new puzzle for next level
+        _generatePuzzleForLevel(nextLevel);
+        print('Puzzle generated for level $nextLevel');
+      } else {
+        // Game completed! Show celebration or restart
+        print('All levels completed! Restarting from level 1');
+        await _saveCurrentLevel(1); // Reset to level 1
+        _generatePuzzleForLevel(1); // Restart from level 1
+      }
+    } catch (e) {
+      print('Error during level transition: $e');
+      // Fallback: try to restart from level 1
+      try {
+        await _saveCurrentLevel(1);
+        _generatePuzzleForLevel(1);
+      } catch (fallbackError) {
+        print('Fallback error: $fallbackError');
+      }
     }
   }
 
