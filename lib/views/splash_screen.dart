@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:word_game/utils/responsive_helper.dart';
 import 'package:word_game/viewmodels/game_view_model.dart';
-
-import 'main_menu_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,21 +49,32 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startLoading() async {
-    // GameViewModel'i initialize et
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    await viewModel.initializeGame();
+    try {
+      // GameViewModel'i initialize et - post-frame callback ile güvenli şekilde
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          final viewModel = Provider.of<GameViewModel>(context, listen: false);
+          await viewModel.initializeGame();
+        }
+      });
 
-    // Animasyonu başlat
-    _animationController.forward();
+      // Animasyonu başlat
+      if (mounted) {
+        _animationController.forward();
+      }
 
-    // Animasyon tamamen bittiğinde main menu'ye geç
-    await Future.delayed(const Duration(milliseconds: 3000));
+      // Animasyon tamamen bittiğinde main menu'ye geç
+      await Future.delayed(const Duration(milliseconds: 3000));
 
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainMenuScreen()),
-      );
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main-menu');
+      }
+    } catch (e) {
+      print('Error in splash screen loading: $e');
+      // Even if there's an error, try to navigate to main menu
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main-menu');
+      }
     }
   }
 
@@ -106,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
                       children: [
                         Text(
                           'WORD',
-                          style: GoogleFonts.pressStart2p(
+                          style: TextStyle(
                             fontSize:
                                 ResponsiveHelper.getResponsiveTitleFontSize(
                                   context,
@@ -132,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         Text(
                           'GAME',
-                          style: GoogleFonts.pressStart2p(
+                          style: TextStyle(
                             fontSize:
                                 ResponsiveHelper.getResponsiveTitleFontSize(
                                   context,

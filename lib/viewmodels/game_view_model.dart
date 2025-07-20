@@ -19,6 +19,9 @@ class GameViewModel extends ChangeNotifier {
 
   bool _isLoading = true;
   GameMode _currentMode = GameMode.german; // Default to German mode
+  bool _isDisposed = false; // Track if the view model is disposed
+  DateTime? _lastNotifyTime; // Track last notification time for debouncing
+  final bool _isInBuild = false; // Track if we're currently in build phase
 
   GameModel get game => _game;
   bool get isLoading => _isLoading;
@@ -29,36 +32,93 @@ class GameViewModel extends ChangeNotifier {
     // Initialization will be called manually from splash screen
   }
 
-  Future<void> _initializeGame() async {
-    _isLoading = true;
-    notifyListeners();
+  // Safe notifyListeners method with debouncing and post-frame callback
+  void _safeNotifyListeners() {
+    if (_isDisposed) return;
 
-    print('Initializing game...');
-    // Load both German and LV words
-    await WordService.loadWords();
-    print('German words loaded');
-
-    await WordService.loadLVWords();
-    print('LV words loaded, total LV levels: ${WordService.totalLVLevels}');
-
-    // Verify LV levels are loaded
-    if (WordService.totalLVLevels == 0) {
-      print('WARNING: No LV levels loaded!');
-    } else {
-      print(
-        'LV levels loaded successfully. First level: ${WordService.getLVLevelData(1)?.theme}',
-      );
+    // Debounce rapid notifications (minimum 16ms between calls = ~60fps)
+    final now = DateTime.now();
+    if (_lastNotifyTime != null &&
+        now.difference(_lastNotifyTime!).inMilliseconds < 16) {
+      return;
     }
 
-    // Load saved mode and level
-    await _loadSavedState();
-    print('Saved state loaded, current mode: ${_currentMode.name}');
+    // Always use post-frame callback to ensure we're not in build phase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed) {
+        try {
+          notifyListeners();
+          _lastNotifyTime = DateTime.now();
+        } catch (e) {
+          print('Error in notifyListeners: $e');
+        }
+      }
+    });
+  }
 
-    _isLoading = false;
-    notifyListeners();
+  // Force notifyListeners for important state changes
+  void _forceNotifyListeners() {
+    if (_isDisposed) return;
+
+    // Always use post-frame callback to ensure we're not in build phase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed) {
+        try {
+          notifyListeners();
+          _lastNotifyTime = DateTime.now();
+        } catch (e) {
+          print('Error in force notifyListeners: $e');
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  Future<void> _initializeGame() async {
+    if (_isDisposed) return;
+
+    _isLoading = true;
+    _forceNotifyListeners(); // Use force for loading state
+
+    try {
+      print('Initializing game...');
+      // Load both German and LV words
+      await WordService.loadWords();
+      print('German words loaded');
+
+      await WordService.loadLVWords();
+      print('LV words loaded, total LV levels: ${WordService.totalLVLevels}');
+
+      // Verify LV levels are loaded
+      if (WordService.totalLVLevels == 0) {
+        print('WARNING: No LV levels loaded!');
+      } else {
+        print(
+          'LV levels loaded successfully. First level: ${WordService.getLVLevelData(1)?.theme}',
+        );
+      }
+
+      // Load saved mode and level
+      await _loadSavedState();
+      print('Saved state loaded, current mode: ${_currentMode.name}');
+
+      _isLoading = false;
+      _forceNotifyListeners(); // Force notification for loading state change
+    } catch (e) {
+      print('Error during game initialization: $e');
+      _isLoading = false;
+      _forceNotifyListeners(); // Force notification even on error
+    }
   }
 
   Future<void> _loadSavedState() async {
+    if (_isDisposed) return;
+
     final prefs = await SharedPreferences.getInstance();
     final savedMode =
         prefs.getString('game_mode') ?? 'lv'; // Default to LV mode
@@ -68,7 +128,14 @@ class GameViewModel extends ChangeNotifier {
         prefs.getInt('current_level_${_currentMode.name}') ??
         1; // Always start at level 1
     await _saveCurrentLevel(savedLevel);
-    _generatePuzzleForLevel(savedLevel);
+
+    // Use post-frame callback for puzzle generation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed) {
+        _generatePuzzleForLevel(savedLevel);
+      }
+    });
+
     print(
       'Saved state loaded, current mode: ${_currentMode.name}, level: $savedLevel',
     );
@@ -85,6 +152,8 @@ class GameViewModel extends ChangeNotifier {
   }
 
   void _generatePuzzleForLevel(int levelNumber) {
+    if (_isDisposed) return;
+
     print(
       '_generatePuzzleForLevel called with level $levelNumber, mode: ${_currentMode.name}',
     );
@@ -133,10 +202,12 @@ class GameViewModel extends ChangeNotifier {
     );
 
     print('Game model updated with letters: ${_game.letters}');
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void checkWord(String word) {
+    if (_isDisposed) return;
+
     final upperWord = word.toUpperCase();
 
     print('Checking word: "$word" (uppercase: "$upperWord")');
@@ -160,7 +231,7 @@ class GameViewModel extends ChangeNotifier {
           });
         }
 
-        notifyListeners();
+        _safeNotifyListeners();
       } else {
         print('Word "$upperWord" is valid but already found');
       }
@@ -187,8 +258,10 @@ class GameViewModel extends ChangeNotifier {
   }
 
   void shuffleLetters() {
+    if (_isDisposed) return;
+
     _game.letters.shuffle();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   String? getHint() {
@@ -248,6 +321,8 @@ class GameViewModel extends ChangeNotifier {
 
   // Reset progress to level 1
   Future<void> resetProgress() async {
+    if (_isDisposed) return;
+
     await _saveCurrentLevel(1);
     _generatePuzzleForLevel(1);
   }
@@ -255,5 +330,19 @@ class GameViewModel extends ChangeNotifier {
   // Public method to initialize game (for splash screen)
   Future<void> initializeGame() async {
     await _initializeGame();
+  }
+
+  // Debug method to check view model state
+  void debugState() {
+    print('GameViewModel Debug Info:');
+    print('- Disposed: $_isDisposed');
+    print('- Loading: $_isLoading');
+    print('- In Build: $_isInBuild');
+    print('- Current Mode: ${_currentMode.name}');
+    print('- Current Level: ${_game.currentLevel}');
+    print('- Letters Count: ${_game.letters.length}');
+    print('- Target Words Count: ${_game.targetWords.length}');
+    print('- Found Words Count: ${_game.foundWords.length}');
+    print('- Last Notify Time: $_lastNotifyTime');
   }
 }

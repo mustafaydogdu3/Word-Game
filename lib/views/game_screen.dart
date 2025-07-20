@@ -7,6 +7,8 @@ import '../models/game_model.dart';
 import '../services/sound_service.dart';
 import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
+import 'main_menu_screen.dart';
+import 'settings_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -129,63 +131,263 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  // Güvenli navigation helper
+  void _navigateToMainMenu(BuildContext context) {
+    try {
+      // Tüm route'ları temizle ve ana menüye git
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/main-menu', (route) => false);
+    } catch (e) {
+      print('Navigation error: $e');
+      // Fallback: pop ile geri git
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
   void _showSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              ResponsiveHelper.getResponsiveBorderRadius(context),
-            ),
-          ),
-          title: Text(
-            'Ayarlar',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildSettingsButton(
-                icon: Icons.volume_up,
-                label: 'Ses Açık',
-                iconColor: Colors.green,
-                backgroundColor: Colors.green.shade100,
-                context: context,
-                onTap: () {
-                  Navigator.of(context).pop();
-                  // Handle sound settings
-                },
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: ResponsiveHelper.isTablet(context)
+                ? MediaQuery.of(context).size.width * 0.6
+                : MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF4a4fb5),
+                  Color(0xFF7b5fb0),
+                  Color(0xFFf4a261),
+                ],
               ),
-              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
-              _buildSettingsButton(
-                icon: Icons.volume_off,
-                label: 'Ses Kapalı',
-                iconColor: Colors.red,
-                backgroundColor: Colors.red.shade100,
-                context: context,
-                onTap: () {
-                  Navigator.of(context).pop();
-                  // Handle sound settings
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Kapat',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
                 ),
-              ),
+              ],
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsiveLargeSpacing(context),
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(
+                          ResponsiveHelper.getResponsiveSpacing(context),
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4a4fb5), Color(0xFF7b5fb0)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                          size: ResponsiveHelper.getResponsiveIconSize(context),
+                        ),
+                      ),
+                      SizedBox(
+                        width: ResponsiveHelper.getResponsiveSpacing(context),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Ayarlar',
+                          style: TextStyle(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveTitleFontSize(
+                                  context,
+                                ),
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF4a4fb5),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          await SoundService.playButtonClick();
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(
+                            ResponsiveHelper.getResponsiveSpacing(context) *
+                                0.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.grey.shade600,
+                            size: ResponsiveHelper.getResponsiveIconSize(
+                              context,
+                              mobile: 20.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsiveLargeSpacing(context),
+                  ),
+                  child: Column(
+                    children: [
+                      // Ses ayarları
+                      _buildBeautifulSettingsButton(
+                        icon: SoundService.isSoundEnabled
+                            ? Icons.volume_up
+                            : Icons.volume_off,
+                        label: 'Ses Ayarları',
+                        subtitle: SoundService.isSoundEnabled
+                            ? 'Ses açık'
+                            : 'Ses kapalı',
+                        iconColor: SoundService.isSoundEnabled
+                            ? Colors.green
+                            : Colors.red,
+                        gradientColors: SoundService.isSoundEnabled
+                            ? [Colors.green.shade400, Colors.green.shade600]
+                            : [Colors.red.shade400, Colors.red.shade600],
+                        context: context,
+                        onTap: () async {
+                          await SoundService.playButtonClick();
+                          await SoundService.toggleSound();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            // Dialog'u yeniden açarak güncel durumu göster
+                            _showSettingsDialog(context);
+                          }
+                        },
+                      ),
+
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(context),
+                      ),
+
+                      // Ana menüye dönme
+                      _buildBeautifulSettingsButton(
+                        icon: Icons.home,
+                        label: 'Ana Menüye Dön',
+                        subtitle: 'Oyunu kaydet ve ana menüye dön',
+                        iconColor: Colors.white,
+                        gradientColors: [
+                          Colors.blue.shade400,
+                          Colors.blue.shade700,
+                        ],
+                        context: context,
+                        onTap: () async {
+                          await SoundService.playButtonClick();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+
+                          // Onay dialog'u göster
+                          if (context.mounted) {
+                            final bool?
+                            confirm = await _showBeautifulConfirmationDialog(
+                              context,
+                              'Ana Menüye Dön?',
+                              'Mevcut oyun ilerlemeniz kaydedilecek. Ana menüye dönmek istediğinizden emin misiniz?',
+                              'Evet, Dön',
+                              Colors.blue,
+                            );
+
+                            if (confirm == true && context.mounted) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => const MainMenuScreen(),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(context),
+                      ),
+
+                      // Seviye yeniden başlatma
+                      _buildBeautifulSettingsButton(
+                        icon: Icons.refresh,
+                        label: 'Seviyeyi Yeniden Başlat',
+                        subtitle: 'Mevcut seviyeyi sıfırla',
+                        iconColor: Colors.white,
+                        gradientColors: [
+                          Colors.orange.shade400,
+                          Colors.orange.shade700,
+                        ],
+                        context: context,
+                        onTap: () async {
+                          await SoundService.playButtonClick();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+
+                          // Onay dialog'u göster
+                          if (context.mounted) {
+                            final bool?
+                            confirm = await _showBeautifulConfirmationDialog(
+                              context,
+                              'Seviyeyi Yeniden Başlat?',
+                              'Mevcut seviye ilerlemeniz sıfırlanacak. Yeniden başlatmak istediğinizden emin misiniz?',
+                              'Evet, Sıfırla',
+                              Colors.orange,
+                            );
+
+                            if (confirm == true && context.mounted) {
+                              final viewModel = Provider.of<GameViewModel>(
+                                context,
+                                listen: false,
+                              );
+                              await viewModel.resetProgress();
+                              // Başarı mesajı göster
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Seviye başarıyla yeniden başlatıldı!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -338,7 +540,7 @@ class _GameScreenState extends State<GameScreen> {
               GestureDetector(
                 onTap: () async {
                   await SoundService.playButtonClick();
-                  _showSettingsDialog(context);
+                  SettingsDialog.show(context);
                 },
                 child: Container(
                   width: ResponsiveHelper.getResponsiveSettingsButtonSize(
@@ -918,6 +1120,526 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     return widgets;
+  }
+
+  // Güzel ayarlar butonu
+  Widget _buildBeautifulSettingsButton({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color iconColor,
+    required List<Color> gradientColors,
+    required BuildContext context,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(
+          bottom: ResponsiveHelper.getResponsiveSpacing(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradientColors,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors.first.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.all(
+                ResponsiveHelper.getResponsiveLargeSpacing(context),
+              ),
+              child: Row(
+                children: [
+                  // Icon container
+                  Container(
+                    width: ResponsiveHelper.getResponsiveIconSize(
+                      context,
+                      mobile: 55.0,
+                      tablet: 65.0,
+                      desktop: 75.0,
+                    ),
+                    height: ResponsiveHelper.getResponsiveIconSize(
+                      context,
+                      mobile: 55.0,
+                      tablet: 65.0,
+                      desktop: 75.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: iconColor,
+                      size: ResponsiveHelper.getResponsiveIconSize(
+                        context,
+                        mobile: 26.0,
+                        tablet: 30.0,
+                        desktop: 34.0,
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    width: ResponsiveHelper.getResponsiveSpacing(context),
+                  ),
+
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveSubtitleFontSize(
+                                  context,
+                                ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(
+                          height:
+                              ResponsiveHelper.getResponsiveSpacing(context) *
+                              0.5,
+                        ),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveCaptionFontSize(
+                                  context,
+                                ),
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Arrow icon
+                  Container(
+                    padding: EdgeInsets.all(
+                      ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: ResponsiveHelper.getResponsiveIconSize(
+                        context,
+                        mobile: 16.0,
+                        tablet: 18.0,
+                        desktop: 20.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Modern ayarlar butonu
+  Widget _buildModernSettingsButton({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color iconColor,
+    required Color backgroundColor,
+    required BuildContext context,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(
+          ResponsiveHelper.getResponsiveLargeSpacing(context),
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon container
+            Container(
+              width: ResponsiveHelper.getResponsiveIconSize(
+                context,
+                mobile: 50.0,
+                tablet: 60.0,
+                desktop: 70.0,
+              ),
+              height: ResponsiveHelper.getResponsiveIconSize(
+                context,
+                mobile: 50.0,
+                tablet: 60.0,
+                desktop: 70.0,
+              ),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: iconColor.withOpacity(0.3), width: 2),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: ResponsiveHelper.getResponsiveIconSize(
+                  context,
+                  mobile: 24.0,
+                  tablet: 28.0,
+                  desktop: 32.0,
+                ),
+              ),
+            ),
+
+            SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
+                        context,
+                      ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(
+                    height:
+                        ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
+                        context,
+                      ),
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Arrow icon
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey.shade400,
+              size: ResponsiveHelper.getResponsiveIconSize(
+                context,
+                mobile: 16.0,
+                tablet: 18.0,
+                desktop: 20.0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Güzel onay dialog'u helper metodu
+  Future<bool?> _showBeautifulConfirmationDialog(
+    BuildContext context,
+    String title,
+    String message,
+    String confirmText,
+    Color confirmColor,
+  ) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: ResponsiveHelper.isTablet(context)
+                ? MediaQuery.of(context).size.width * 0.4
+                : MediaQuery.of(context).size.width * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 25,
+                  spreadRadius: 5,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsiveLargeSpacing(context),
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [confirmColor, confirmColor.withOpacity(0.7)],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(
+                          ResponsiveHelper.getResponsiveSpacing(context),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.white,
+                          size: ResponsiveHelper.getResponsiveIconSize(context),
+                        ),
+                      ),
+                      SizedBox(
+                        width: ResponsiveHelper.getResponsiveSpacing(context),
+                      ),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize:
+                                ResponsiveHelper.getResponsiveTitleFontSize(
+                                  context,
+                                ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsiveLargeSpacing(context),
+                  ),
+                  child: Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
+                        context,
+                      ),
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+                // Actions
+                Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsiveLargeSpacing(context),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await SoundService.playButtonClick();
+                            Navigator.of(context).pop(false);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: ResponsiveHelper.getResponsiveSpacing(
+                                context,
+                              ),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              'İptal',
+                              style: TextStyle(
+                                fontSize:
+                                    ResponsiveHelper.getResponsiveBodyFontSize(
+                                      context,
+                                    ),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: ResponsiveHelper.getResponsiveSpacing(context),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await SoundService.playButtonClick();
+                            Navigator.of(context).pop(true);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: ResponsiveHelper.getResponsiveSpacing(
+                                context,
+                              ),
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  confirmColor,
+                                  confirmColor.withOpacity(0.7),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: confirmColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              confirmText,
+                              style: TextStyle(
+                                fontSize:
+                                    ResponsiveHelper.getResponsiveBodyFontSize(
+                                      context,
+                                    ),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Onay dialog'u helper metodu
+  Future<bool?> _showConfirmationDialog(
+    BuildContext context,
+    String title,
+    String message,
+    String confirmText,
+    Color confirmColor,
+  ) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              color: Colors.grey.shade700,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await SoundService.playButtonClick();
+                Navigator.of(context).pop(false);
+              },
+              child: Text(
+                'İptal',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await SoundService.playButtonClick();
+                Navigator.of(context).pop(true);
+              },
+              style: TextButton.styleFrom(foregroundColor: confirmColor),
+              child: Text(
+                confirmText,
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildSettingsButton({

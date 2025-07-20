@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/sound_service.dart';
 import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
-import 'game_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -294,7 +293,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           GestureDetector(
             onTap: () async {
               await SoundService.playButtonClick();
-              _showSettingsDialog();
+              Navigator.pushNamed(context, '/settings');
             },
             child: Container(
               width: ResponsiveHelper.getResponsiveSettingsButtonSize(context),
@@ -531,9 +530,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return GestureDetector(
       onTap: () async {
         await SoundService.playButtonClick();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const GameScreen()),
-        );
+        Navigator.of(context).pushReplacementNamed('/game');
       },
       child: Container(
         width: ResponsiveHelper.getResponsiveButtonWidth(context),
