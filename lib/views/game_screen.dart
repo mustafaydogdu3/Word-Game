@@ -22,27 +22,27 @@ class _GameScreenState extends State<GameScreen> {
   List<Offset> linePoints = [];
   bool isPanning = false;
   bool _showLevelCompleteOverlay = false;
+  GameViewModel? _viewModel; // Store view model reference
 
   @override
   void initState() {
     super.initState();
     // Listen to game completion
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = Provider.of<GameViewModel>(context, listen: false);
-      viewModel.addListener(_onGameStateChanged);
+      _viewModel = Provider.of<GameViewModel>(context, listen: false);
+      _viewModel?.addListener(_onGameStateChanged);
     });
   }
 
   @override
   void dispose() {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    viewModel.removeListener(_onGameStateChanged);
+    // Safely remove listener using stored reference
+    _viewModel?.removeListener(_onGameStateChanged);
     super.dispose();
   }
 
   void _onGameStateChanged() {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    if (viewModel.game.isCompleted && !_showLevelCompleteOverlay) {
+    if (_viewModel?.game.isCompleted == true && !_showLevelCompleteOverlay) {
       setState(() {
         _showLevelCompleteOverlay = true;
       });
@@ -147,7 +147,9 @@ class _GameScreenState extends State<GameScreen> {
       isPanning = false;
     });
 
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    // Use stored view model reference if available, otherwise get from context
+    final viewModel =
+        _viewModel ?? Provider.of<GameViewModel>(context, listen: false);
     final letters = viewModel.game.letters;
 
     // Only validate words selected from the circle - NOT from grid positions
@@ -400,10 +402,13 @@ class _GameScreenState extends State<GameScreen> {
                             );
 
                             if (confirm == true && context.mounted) {
-                              final viewModel = Provider.of<GameViewModel>(
-                                context,
-                                listen: false,
-                              );
+                              // Use stored view model reference if available, otherwise get from context
+                              final viewModel =
+                                  _viewModel ??
+                                  Provider.of<GameViewModel>(
+                                    context,
+                                    listen: false,
+                                  );
                               await viewModel.resetProgress();
                               // Başarı mesajı göster
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -487,6 +492,10 @@ class _GameScreenState extends State<GameScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 stops: [0.0, 0.6, 1.0],
+              ),
+              image: DecorationImage(
+                image: AssetImage('assets/images/istanbul.webp'),
+                fit: BoxFit.cover,
               ),
             ),
             child: SafeArea(
@@ -734,8 +743,8 @@ class _GameScreenState extends State<GameScreen> {
         // Puzzle grid - Optimized to only show cells with letters
         Expanded(
           flex: shouldUseCompactLayout
-              ? 2
-              : (shouldUseHorizontalLayout ? 4 : 3),
+              ? 3 // Increased from 2 for better space utilization
+              : (shouldUseHorizontalLayout ? 5 : 4), // Increased flex values
           child: Center(child: _buildOptimizedGrid(context, viewModel, grid)),
         ),
 
@@ -837,34 +846,39 @@ class _GameScreenState extends State<GameScreen> {
     int gridWidth = maxCol - minCol + 1;
     int gridHeight = maxRow - minRow + 1;
 
-    // Use dynamic grid cell size based on gridSize from JSON
-    double cellSize = ResponsiveHelper.getDynamicGridCellSize(
+    // Use optimized grid cell size for better space utilization
+    double cellSize = ResponsiveHelper.getOptimizedGridCellSize(
       context,
       gridWidth,
       gridHeight,
     );
-    double cellSpacing =
-        ResponsiveHelper.getResponsiveSpacing(context) *
-        0.3; // Reduced spacing for better fit
+
+    // Use optimal spacing based on cell size
+    double cellSpacing = ResponsiveHelper.getOptimalGridSpacing(
+      context,
+      cellSize,
+    );
     double totalCellSize = cellSize + cellSpacing;
 
     // Calculate total grid dimensions
     double totalGridWidth = gridWidth * totalCellSize - cellSpacing;
     double totalGridHeight = gridHeight * totalCellSize - cellSpacing;
 
-    // Get available space for grid
+    // Get available space for grid with more aggressive utilization
     final availableWidth = ResponsiveHelper.getAvailableWidth(context);
     final availableHeight = ResponsiveHelper.getAvailableHeight(context);
     final shouldUseHorizontalLayout =
         ResponsiveHelper.shouldUseHorizontalLayout(context);
 
-    // Calculate max grid size based on available space
+    // More aggressive space utilization to minimize gaps
     double maxGridWidth = shouldUseHorizontalLayout
-        ? availableWidth * 0.8
-        : availableWidth * 0.95;
+        ? availableWidth *
+              0.85 // Increased from 0.8
+        : availableWidth * 0.98; // Increased from 0.95
     double maxGridHeight = shouldUseHorizontalLayout
-        ? availableHeight * 0.6
-        : availableHeight * 0.55;
+        ? availableHeight *
+              0.65 // Increased from 0.6
+        : availableHeight * 0.58; // Increased from 0.55
 
     // Scale grid if it's too large (additional safety scaling)
     double scaleFactor = 1.0;
@@ -884,7 +898,7 @@ class _GameScreenState extends State<GameScreen> {
     double scaledTotalGridHeight =
         gridHeight * scaledTotalCellSize - scaledCellSpacing;
 
-    // Create optimized grid with proper centering
+    // Create optimized grid with proper centering and minimal gaps
     return Container(
       constraints: BoxConstraints(
         maxWidth: maxGridWidth,
@@ -1099,7 +1113,7 @@ class _GameScreenState extends State<GameScreen> {
 
           SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
 
-          // Letter circle with responsive sizing
+          // Letter circle with standard sizing
           Center(
             child: SizedBox(
               width: ResponsiveHelper.getResponsiveLetterCircleSize(context),

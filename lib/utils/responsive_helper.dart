@@ -386,25 +386,140 @@ class ResponsiveHelper {
     return finalCellSize;
   }
 
+  // Optimized grid cell size that maximizes space usage and minimizes gaps
+  static double getOptimizedGridCellSize(
+    BuildContext context,
+    int gridCols,
+    int gridRows,
+  ) {
+    final availableWidth = getAvailableWidth(context);
+    final availableHeight = getAvailableHeight(context);
+
+    // Calculate the maximum grid dimension
+    final maxGridDimension = max(gridCols, gridRows);
+
+    // More aggressive space utilization for mobile
+    double maxGridWidth;
+    double maxGridHeight;
+
+    if (isMobile(context)) {
+      // Use more available width for mobile (95% instead of 90%)
+      maxGridWidth = availableWidth * 0.95;
+      // Use more height for grid on mobile
+      maxGridHeight = availableHeight * 0.6;
+    } else if (isTablet(context)) {
+      maxGridWidth = availableWidth * 0.92;
+      maxGridHeight = availableHeight * 0.55;
+    } else {
+      maxGridWidth = availableWidth * 0.88;
+      maxGridHeight = availableHeight * 0.5;
+    }
+
+    // Calculate optimal cell size based on available space
+    double optimalWidth = maxGridWidth / gridCols;
+    double optimalHeight = maxGridHeight / gridRows;
+
+    // Use the smaller of the two to ensure grid fits
+    double optimalCellSize = min(optimalWidth, optimalHeight);
+
+    // Apply device-specific constraints and minimums
+    double finalCellSize;
+
+    if (isMobile(context)) {
+      if (maxGridDimension <= 3) {
+        finalCellSize = optimalCellSize.clamp(45.0, 85.0);
+      } else if (maxGridDimension <= 4) {
+        finalCellSize = optimalCellSize.clamp(40.0, 70.0);
+      } else if (maxGridDimension <= 5) {
+        finalCellSize = optimalCellSize.clamp(35.0, 60.0);
+      } else {
+        finalCellSize = optimalCellSize.clamp(30.0, 55.0);
+      }
+    } else if (isTablet(context)) {
+      if (maxGridDimension <= 3) {
+        finalCellSize = optimalCellSize.clamp(55.0, 95.0);
+      } else if (maxGridDimension <= 4) {
+        finalCellSize = optimalCellSize.clamp(50.0, 85.0);
+      } else if (maxGridDimension <= 5) {
+        finalCellSize = optimalCellSize.clamp(45.0, 80.0);
+      } else {
+        finalCellSize = optimalCellSize.clamp(40.0, 70.0);
+      }
+    } else {
+      if (maxGridDimension <= 3) {
+        finalCellSize = optimalCellSize.clamp(65.0, 120.0);
+      } else if (maxGridDimension <= 4) {
+        finalCellSize = optimalCellSize.clamp(60.0, 100.0);
+      } else if (maxGridDimension <= 5) {
+        finalCellSize = optimalCellSize.clamp(55.0, 90.0);
+      } else {
+        finalCellSize = optimalCellSize.clamp(50.0, 85.0);
+      }
+    }
+
+    print(
+      'Optimized Grid: ${gridCols}x$gridRows, Optimal: ${optimalCellSize.toStringAsFixed(1)}, Final: ${finalCellSize.toStringAsFixed(1)}, MaxWidth: ${maxGridWidth.toStringAsFixed(1)}, MaxHeight: ${maxGridHeight.toStringAsFixed(1)}',
+    );
+
+    return finalCellSize;
+  }
+
+  // Get optimal grid spacing based on cell size
+  static double getOptimalGridSpacing(BuildContext context, double cellSize) {
+    // Smaller spacing for better space utilization
+    if (isMobile(context)) {
+      return max(2.0, cellSize * 0.05); // 5% of cell size, minimum 2px
+    } else if (isTablet(context)) {
+      return max(3.0, cellSize * 0.06); // 6% of cell size, minimum 3px
+    } else {
+      return max(4.0, cellSize * 0.07); // 7% of cell size, minimum 4px
+    }
+  }
+
   static double getResponsiveLetterCircleSize(BuildContext context) {
     final availableWidth = getAvailableWidth(context);
     final availableHeight = getAvailableHeight(context);
 
     if (isMobile(context)) {
-      final widthBased = (availableWidth * 0.65).clamp(250.0, 350.0);
-      final heightBased = (availableHeight * 0.25).clamp(250.0, 350.0);
+      // Increased percentages for larger letter circle
+      final widthBased = (availableWidth * 0.605).clamp(
+        242.0,
+        352.0,
+      ); // Increased by 10% from 0.55
+      final heightBased = (availableHeight * 0.22).clamp(
+        242.0,
+        352.0,
+      ); // Increased by 10% from 0.20
       return widthBased < heightBased ? widthBased : heightBased;
     } else if (isTablet(context)) {
-      final widthBased = (availableWidth * 0.45).clamp(320.0, 450.0);
-      final heightBased = (availableHeight * 0.20).clamp(320.0, 450.0);
+      final widthBased = (availableWidth * 0.418).clamp(
+        308.0,
+        440.0,
+      ); // Increased by 10% from 0.38
+      final heightBased = (availableHeight * 0.187).clamp(
+        308.0,
+        440.0,
+      ); // Increased by 10% from 0.17
       return widthBased < heightBased ? widthBased : heightBased;
     } else if (isLargeDesktop(context)) {
-      final widthBased = (availableWidth * 0.25).clamp(450.0, 700.0);
-      final heightBased = (availableHeight * 0.15).clamp(450.0, 700.0);
+      final widthBased = (availableWidth * 0.242).clamp(
+        440.0,
+        715.0,
+      ); // Increased by 10% from 0.22
+      final heightBased = (availableHeight * 0.143).clamp(
+        440.0,
+        715.0,
+      ); // Increased by 10% from 0.13
       return widthBased < heightBased ? widthBased : heightBased;
     } else {
-      final widthBased = (availableWidth * 0.30).clamp(380.0, 550.0);
-      final heightBased = (availableHeight * 0.18).clamp(380.0, 550.0);
+      final widthBased = (availableWidth * 0.286).clamp(
+        374.0,
+        550.0,
+      ); // Increased by 10% from 0.26
+      final heightBased = (availableHeight * 0.176).clamp(
+        374.0,
+        550.0,
+      ); // Increased by 10% from 0.16
       return widthBased < heightBased ? widthBased : heightBased;
     }
   }
