@@ -92,10 +92,9 @@ class _GameScreenState extends State<GameScreen> {
 
           if ((position - letterCenter).distance < touchRadius) {
             if (!selectedIndexes.contains(i)) {
+              // İlk harfi ekle - sadece harf pozisyonu
               selectedIndexes.add(i);
-              linePoints.add(
-                localLetterCenter,
-              ); // Local koordinat (CustomPainter için)
+              linePoints.add(localLetterCenter); // Sadece harf pozisyonu
               SoundService.playWordFound();
             }
             break;
@@ -137,23 +136,24 @@ class _GameScreenState extends State<GameScreen> {
 
           if ((position - letterCenter).distance < touchRadius) {
             if (!selectedIndexes.contains(i)) {
+              // Yeni harf ekleme - ileri sürükleme
               selectedIndexes.add(i);
-              linePoints.add(
-                localLetterCenter,
-              ); // Local koordinat (CustomPainter için)
+              linePoints.add(localLetterCenter); // Sadece harf pozisyonu
               SoundService.playWordFound();
+            } else {
+              // Geriye doğru hareket - önceki harfleri kaldır
+              final existingIndex = selectedIndexes.indexOf(i);
+              if (existingIndex < selectedIndexes.length - 1) {
+                // Bu harften sonraki tüm harfleri kaldır
+                final removeCount = selectedIndexes.length - existingIndex - 1;
+                for (int j = 0; j < removeCount; j++) {
+                  selectedIndexes.removeLast();
+                  linePoints.removeLast(); // Harf pozisyonu
+                }
+                SoundService.playError();
+              }
             }
-          }
-        }
-
-        // WOW tarzı çizgi güncelleme - parmağın pozisyonunu güncelle
-        if (linePoints.isNotEmpty) {
-          // Son nokta parmağın pozisyonu olsun (local koordinatta)
-          final Offset localPosition = position - circleTopLeft;
-          if (linePoints.length % 2 == 1) {
-            linePoints.add(localPosition);
-          } else {
-            linePoints.last = localPosition;
+            break; // Sadece bir harf işle
           }
         }
       }
@@ -1740,7 +1740,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-// WOW tarzı CustomPainter - her segment ayrı ayrı çizilir
+// WOW tarzı CustomPainter - center-to-center drawing with dots
 class LinePainter extends CustomPainter {
   final List<Offset> points;
   final double letterRadius;
@@ -1751,7 +1751,7 @@ class LinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.length < 2) return;
 
-    // WOW tarzı çizgi çizimi - her segment ayrı ayrı
+    // WOW tarzı çizgi çizimi - center to center
     final paint = Paint()
       ..color = Colors.orange.shade600
       ..style = PaintingStyle.stroke
@@ -1772,17 +1772,12 @@ class LinePainter extends CustomPainter {
       ..color = Colors.orange.shade700
       ..style = PaintingStyle.fill;
 
-    // Sadece harf merkezlerini al (çift indeksler)
-    final List<Offset> letterCenters = [];
-    for (int i = 0; i < points.length; i += 2) {
-      if (i < points.length) {
-        letterCenters.add(points[i]);
-      }
-    }
+    // Tüm noktalar harf merkezleri
+    final List<Offset> letterCenters = points;
 
     if (letterCenters.length < 2) return;
 
-    // Her segment için ayrı çizgi çiz
+    // Her segment için ayrı çizgi çiz - edge to edge
     for (int i = 0; i < letterCenters.length - 1; i++) {
       final currentCenter = letterCenters[i];
       final nextCenter = letterCenters[i + 1];
@@ -1793,7 +1788,7 @@ class LinePainter extends CustomPainter {
       // Sonraki harfin kenar noktasını hesapla
       final endEdge = _getCircleEdgePoint(nextCenter, currentCenter);
 
-      // Her segment için ayrı path oluştur
+      // Her segment için ayrı path oluştur - edge to edge
       final segmentPath = Path();
       segmentPath.moveTo(startEdge.dx, startEdge.dy);
       segmentPath.lineTo(endEdge.dx, endEdge.dy);
@@ -1803,7 +1798,7 @@ class LinePainter extends CustomPainter {
       canvas.drawPath(segmentPath, paint);
     }
 
-    // Her harf merkezinde nokta çiz
+    // Her harf için kenar noktasında dot çiz
     for (int i = 0; i < letterCenters.length; i++) {
       final currentCenter = letterCenters[i];
       final nextCenter = i + 1 < letterCenters.length
@@ -1811,38 +1806,39 @@ class LinePainter extends CustomPainter {
           : null;
       final prevCenter = i > 0 ? letterCenters[i - 1] : null;
 
-      // Nokta pozisyonunu hesapla
+      // Nokta pozisyonunu hesapla - kenarda
       Offset dotPosition;
-      if (i == 0) {
+      if (i == 0 && nextCenter != null) {
         // İlk harf - sonraki harfe doğru kenar
-        dotPosition = _getCircleEdgePoint(currentCenter, nextCenter!);
-      } else if (i == letterCenters.length - 1) {
+        dotPosition = _getCircleEdgePoint(currentCenter, nextCenter);
+      } else if (i == letterCenters.length - 1 && prevCenter != null) {
         // Son harf - önceki harfe doğru kenar
-        dotPosition = _getCircleEdgePoint(currentCenter, prevCenter!);
-      } else {
+        dotPosition = _getCircleEdgePoint(currentCenter, prevCenter);
+      } else if (prevCenter != null && nextCenter != null) {
         // Orta harfler - iki yöne de kenar hesapla ve ortalaması
-        final edge1 = _getCircleEdgePoint(currentCenter, prevCenter!);
-        final edge2 = _getCircleEdgePoint(currentCenter, nextCenter!);
+        final edge1 = _getCircleEdgePoint(currentCenter, prevCenter);
+        final edge2 = _getCircleEdgePoint(currentCenter, nextCenter);
         dotPosition = Offset(
           (edge1.dx + edge2.dx) / 2,
           (edge1.dy + edge2.dy) / 2,
         );
+      } else {
+        // Fallback - merkez nokta
+        dotPosition = currentCenter;
       }
 
       canvas.drawCircle(dotPosition, 5.0, dotPaint);
     }
   }
 
-  // Harf çemberinin kenar noktasını hesapla
-  Offset _getCircleEdgePoint(Offset center, Offset towards) {
-    // İki nokta arasındaki yönü hesapla
-    final direction = (towards - center).direction;
+  // Çember kenarındaki noktayı hesapla - normalized direction ile
+  Offset _getCircleEdgePoint(Offset center, Offset target) {
+    final direction = target - center;
+    final distance = direction.distance;
+    if (distance == 0) return center;
 
-    // Harf çemberinin kenarındaki noktayı hesapla
-    return Offset(
-      center.dx + letterRadius * cos(direction),
-      center.dy + letterRadius * sin(direction),
-    );
+    final normalizedDirection = direction / distance;
+    return center + normalizedDirection * letterRadius;
   }
 
   @override
