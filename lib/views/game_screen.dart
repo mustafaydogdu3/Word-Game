@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../models/game_model.dart';
 import '../services/sound_service.dart';
-import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
 import 'main_menu_screen.dart';
 import 'settings_dialog.dart';
@@ -23,6 +22,7 @@ class _GameScreenState extends State<GameScreen> {
   bool isPanning = false;
   bool _showLevelCompleteOverlay = false;
   GameViewModel? _viewModel; // Store view model reference
+  final GlobalKey _circleKey = GlobalKey(); // WOW tarzı harf seçimi için key
 
   @override
   void initState() {
@@ -69,26 +69,35 @@ class _GameScreenState extends State<GameScreen> {
       linePoints.clear();
       isPanning = true;
 
-      // Check if starting on a letter
-      final touchRadius =
-          ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
+      // WOW tarzı harf seçimi - global koordinat uyumlu
       final circleSize = _getDynamicLetterCircleSize(context, letters.length);
+      final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
       final center = circleSize / 2;
-      final radius = circleSize * 0.32;
+      final radius = circleSize * 0.35;
 
-      for (int i = 0; i < letters.length; i++) {
-        final double angle = (2 * pi * i) / letters.length - pi / 2;
-        final letterCenter = Offset(
-          center + radius * cos(angle),
-          center + radius * sin(angle),
-        );
-        if ((position - letterCenter).distance < touchRadius) {
-          if (!selectedIndexes.contains(i)) {
-            selectedIndexes.add(i);
-            linePoints.add(letterCenter);
-            SoundService.playWordFound();
+      // Global koordinat dönüşümü için RenderBox al
+      final RenderBox? box =
+          _circleKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box != null) {
+        final Offset circleTopLeft = box.localToGlobal(Offset.zero);
+
+        for (int i = 0; i < letters.length; i++) {
+          final double angle = (2 * pi * i) / letters.length - pi / 2;
+          final Offset localLetterCenter = Offset(
+            center + radius * cos(angle),
+            center + radius * sin(angle),
+          );
+          // Local koordinatı global koordinata çevir
+          final Offset letterCenter = localLetterCenter + circleTopLeft;
+
+          if ((position - letterCenter).distance < touchRadius) {
+            if (!selectedIndexes.contains(i)) {
+              selectedIndexes.add(i);
+              linePoints.add(localLetterCenter); // Çizim için local koordinat
+              SoundService.playWordFound();
+            }
+            break;
           }
-          break;
         }
       }
     });
@@ -103,36 +112,45 @@ class _GameScreenState extends State<GameScreen> {
     ).game.letters;
 
     setState(() {
-      // Update current line endpoint
-      if (linePoints.isNotEmpty) {
-        if (linePoints.length % 2 == 1) {
-          linePoints.add(position);
-        } else {
-          linePoints.last = position;
-        }
-      }
-
-      // Check if over a letter
-      final touchRadius =
-          ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
+      // WOW tarzı harf seçimi - global koordinat uyumlu
       final circleSize = _getDynamicLetterCircleSize(context, letters.length);
+      final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
       final center = circleSize / 2;
-      final radius = circleSize * 0.32;
+      final radius = circleSize * 0.35;
 
-      for (int i = 0; i < letters.length; i++) {
-        final double angle = (2 * pi * i) / letters.length - pi / 2;
-        final letterCenter = Offset(
-          center + radius * cos(angle),
-          center + radius * sin(angle),
-        );
+      // Global koordinat dönüşümü için RenderBox al
+      final RenderBox? box =
+          _circleKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box != null) {
+        final Offset circleTopLeft = box.localToGlobal(Offset.zero);
 
-        if ((position - letterCenter).distance < touchRadius) {
-          if (!selectedIndexes.contains(i)) {
-            selectedIndexes.add(i);
-            linePoints.add(letterCenter);
-            SoundService.playWordFound();
+        for (int i = 0; i < letters.length; i++) {
+          final double angle = (2 * pi * i) / letters.length - pi / 2;
+          final Offset localLetterCenter = Offset(
+            center + radius * cos(angle),
+            center + radius * sin(angle),
+          );
+          // Local koordinatı global koordinata çevir
+          final Offset letterCenter = localLetterCenter + circleTopLeft;
+
+          if ((position - letterCenter).distance < touchRadius) {
+            if (!selectedIndexes.contains(i)) {
+              selectedIndexes.add(i);
+              linePoints.add(localLetterCenter); // Çizim için local koordinat
+              SoundService.playWordFound();
+            }
           }
-          break;
+        }
+
+        // WOW tarzı çizgi güncelleme - sadece parmağın pozisyonunu güncelle
+        if (linePoints.isNotEmpty) {
+          // Son nokta parmağın pozisyonu olsun (local koordinatta)
+          final Offset localPosition = position - circleTopLeft;
+          if (linePoints.length % 2 == 1) {
+            linePoints.add(localPosition);
+          } else {
+            linePoints.last = localPosition;
+          }
         }
       }
     });
@@ -143,12 +161,12 @@ class _GameScreenState extends State<GameScreen> {
       isPanning = false;
     });
 
-    // Use stored view model reference if available, otherwise get from context
+    // Working logic: Form word from selected letters
     final viewModel =
         _viewModel ?? Provider.of<GameViewModel>(context, listen: false);
     final letters = viewModel.game.letters;
 
-    // Only validate words selected from the circle - NOT from grid positions
+    // Convert selected letter indexes to word in selection order
     final selectedWord = selectedIndexes
         .where((i) => i >= 0 && i < letters.length)
         .map((i) => letters[i])
@@ -159,6 +177,7 @@ class _GameScreenState extends State<GameScreen> {
       viewModel.checkWord(selectedWord);
     }
 
+    // Clear selection for next interaction
     setState(() {
       selectedIndexes.clear();
       linePoints.clear();
@@ -189,9 +208,7 @@ class _GameScreenState extends State<GameScreen> {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            width: ResponsiveHelper.isTablet(context)
-                ? MediaQuery.of(context).size.width * 0.6
-                : MediaQuery.of(context).size.width * 0.9,
+            width: MediaQuery.of(context).size.width * 0.6,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
@@ -216,9 +233,7 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 // Header
                 Container(
-                  padding: EdgeInsets.all(
-                    ResponsiveHelper.getResponsiveLargeSpacing(context),
-                  ),
+                  padding: EdgeInsets.all(16.0),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
@@ -229,9 +244,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(
-                          ResponsiveHelper.getResponsiveSpacing(context),
-                        ),
+                        padding: EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFF4a4fb5), Color(0xFF7b5fb0)],
@@ -241,20 +254,15 @@ class _GameScreenState extends State<GameScreen> {
                         child: Icon(
                           Icons.settings,
                           color: Colors.white,
-                          size: ResponsiveHelper.getResponsiveIconSize(context),
+                          size: 28.0,
                         ),
                       ),
-                      SizedBox(
-                        width: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
+                      SizedBox(width: 12.0),
                       Expanded(
                         child: Text(
                           'Ayarlar',
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveTitleFontSize(
-                                  context,
-                                ),
+                            fontSize: 20.0,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF4a4fb5),
                           ),
@@ -266,10 +274,7 @@ class _GameScreenState extends State<GameScreen> {
                           Navigator.of(context).pop();
                         },
                         child: Container(
-                          padding: EdgeInsets.all(
-                            ResponsiveHelper.getResponsiveSpacing(context) *
-                                0.5,
-                          ),
+                          padding: EdgeInsets.all(12.0 * 0.5),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(8),
@@ -277,10 +282,7 @@ class _GameScreenState extends State<GameScreen> {
                           child: Icon(
                             Icons.close,
                             color: Colors.grey.shade600,
-                            size: ResponsiveHelper.getResponsiveIconSize(
-                              context,
-                              mobile: 20.0,
-                            ),
+                            size: 20.0,
                           ),
                         ),
                       ),
@@ -290,9 +292,7 @@ class _GameScreenState extends State<GameScreen> {
 
                 // Content
                 Container(
-                  padding: EdgeInsets.all(
-                    ResponsiveHelper.getResponsiveLargeSpacing(context),
-                  ),
+                  padding: EdgeInsets.all(24.0),
                   child: Column(
                     children: [
                       // Ses ayarları
@@ -322,9 +322,7 @@ class _GameScreenState extends State<GameScreen> {
                         },
                       ),
 
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
+                      SizedBox(height: 12.0),
 
                       // Ana menüye dönme
                       _buildBeautifulSettingsButton(
@@ -365,9 +363,7 @@ class _GameScreenState extends State<GameScreen> {
                         },
                       ),
 
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
+                      SizedBox(height: 12.0),
 
                       // Seviye yeniden başlatma
                       _buildBeautifulSettingsButton(
@@ -433,12 +429,12 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context);
-    final isLandscape = ResponsiveHelper.isLandscape(context);
-    final isTablet = ResponsiveHelper.isTablet(context);
-    final isDesktop = ResponsiveHelper.isDesktop(context);
-    final shouldUseCompactLayout = ResponsiveHelper.shouldUseCompactLayout(
-      context,
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+    final isLandscape = screenWidth > screenHeight;
+    final shouldUseCompactLayout = isSmallScreen || isLandscape;
 
     // Show loading screen while initializing
     if (viewModel.isLoading) {
@@ -448,13 +444,13 @@ class _GameScreenState extends State<GameScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(),
-              SizedBox(
-                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
-              ),
+              SizedBox(height: screenHeight * 0.04),
               Text(
                 'Kelimeler yükleniyor...',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ],
@@ -509,17 +505,12 @@ class _GameScreenState extends State<GameScreen> {
                   child: _buildTopSection(context, viewModel),
                 ),
 
-                // Grid area - Fixed higher up, never moves
+                // Grid area - Moved higher up with responsive positioning
                 Positioned(
-                  top:
-                      ResponsiveHelper.getResponsiveTopOffset(context) +
-                      ResponsiveHelper.getResponsiveSpacing(context),
+                  top: screenHeight * 0.08,
                   left: 0,
                   right: 0,
-                  bottom:
-                      ResponsiveHelper.getResponsiveLetterCircleSize(context) +
-                      ResponsiveHelper.getResponsiveBottomOffset(context) +
-                      ResponsiveHelper.getResponsiveLargeSpacing(context) * 9,
+                  bottom: screenHeight * 0.45,
                   child: _buildFixedGridArea(
                     context,
                     viewModel,
@@ -530,28 +521,22 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
 
-                // Letter circle - Fixed at bottom
-                Positioned(
-                  bottom: ResponsiveHelper.getResponsiveBottomOffset(context),
-                  left: 0,
-                  right: 0,
-                  child: _buildFixedBottomSection(context, viewModel, letters),
-                ),
-
-                // Selected word display - Overlay positioned above letter circle
+                // Selected word display - Positioned above letter circle
                 if (selectedWord.isNotEmpty)
                   Positioned(
-                    bottom:
-                        ResponsiveHelper.getResponsiveLetterCircleSize(
-                          context,
-                        ) +
-                        ResponsiveHelper.getResponsiveBottomOffset(context) +
-                        ResponsiveHelper.getResponsiveLargeSpacing(context) *
-                            0.5,
+                    bottom: screenHeight * 0.28,
                     left: 0,
                     right: 0,
                     child: _buildSelectedWordOverlay(context, selectedWord),
                   ),
+
+                // Letter circle - Responsive positioning at bottom
+                Positioned(
+                  bottom: screenHeight * 0.05,
+                  left: 0,
+                  right: 0,
+                  child: _buildFixedBottomSection(context, viewModel, letters),
+                ),
               ],
             ),
           ),
@@ -574,12 +559,8 @@ class _GameScreenState extends State<GameScreen> {
       color: Colors.black.withOpacity(0.7),
       child: Center(
         child: Container(
-          padding: EdgeInsets.all(
-            ResponsiveHelper.getResponsiveLargeSpacing(context),
-          ),
-          margin: EdgeInsets.all(
-            ResponsiveHelper.getResponsivePadding(context),
-          ),
+          padding: EdgeInsets.all(24.0),
+          margin: EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -604,8 +585,8 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               // Success icon
               Container(
-                width: ResponsiveHelper.getResponsiveIconSize(context) * 2,
-                height: ResponsiveHelper.getResponsiveIconSize(context) * 2,
+                width: 28.0,
+                height: 28.0,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
@@ -613,21 +594,17 @@ class _GameScreenState extends State<GameScreen> {
                 child: Icon(
                   Icons.check_circle,
                   color: Colors.white,
-                  size: ResponsiveHelper.getResponsiveIconSize(context) * 1.5,
+                  size: 24.0,
                 ),
               ),
 
-              SizedBox(
-                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
-              ),
+              SizedBox(height: 24.0),
 
               // Level completed text
               Text(
                 'SEVİYE TAMAMLANDI!',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-                    context,
-                  ),
+                  fontSize: 20.0,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 2.0,
@@ -635,27 +612,25 @@ class _GameScreenState extends State<GameScreen> {
                 textAlign: TextAlign.center,
               ),
 
-              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+              SizedBox(height: 12.0),
 
               // Level info
               Text(
                 'Seviye ${viewModel.game.currentLevel}',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
-                    context,
-                  ),
+                  fontSize: 14.0,
                   color: Colors.white.withOpacity(0.9),
                   fontWeight: FontWeight.w600,
                 ),
               ),
 
-              SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+              SizedBox(height: 12.0),
 
               // Next level info
               Text(
                 'Sonraki seviyeye geçiliyor...',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: 12.0,
                   color: Colors.white.withOpacity(0.8),
                 ),
                 textAlign: TextAlign.center,
@@ -669,10 +644,7 @@ class _GameScreenState extends State<GameScreen> {
 
   Widget _buildTopSection(BuildContext context, GameViewModel viewModel) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveHelper.getResponsivePadding(context),
-        vertical: ResponsiveHelper.getResponsiveSpacing(context),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
           // Score boxes
@@ -685,7 +657,7 @@ class _GameScreenState extends State<GameScreen> {
                 backgroundColor: Colors.black87,
                 context: context,
               ),
-              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              SizedBox(width: 12.0),
               _buildScoreBox(
                 icon: Icons.water_drop,
                 value: '10',
@@ -702,51 +674,34 @@ class _GameScreenState extends State<GameScreen> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveHelper.getResponsiveSpacing(context),
-                  vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(
-                    context,
-                  ),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
                 decoration: BoxDecoration(
                   color: Colors.black87,
-                  borderRadius: BorderRadius.circular(
-                    ResponsiveHelper.getResponsiveBorderRadius(context),
-                  ),
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: Text(
                   'Seviye ${viewModel.game.currentLevel}',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
-                      context,
-                    ),
+                    fontSize: 12.0,
                   ),
                 ),
               ),
-              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              SizedBox(width: 12.0),
               GestureDetector(
                 onTap: () async {
                   await SoundService.playButtonClick();
                   SettingsDialog.show(context);
                 },
                 child: Container(
-                  width: ResponsiveHelper.getResponsiveSettingsButtonSize(
-                    context,
-                  ),
-                  height: ResponsiveHelper.getResponsiveSettingsButtonSize(
-                    context,
-                  ),
+                  width: 28.0,
+                  height: 28.0,
                   decoration: BoxDecoration(
                     color: Colors.black87,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.settings,
-                    color: Colors.white,
-                    size: ResponsiveHelper.getResponsiveIconSize(context),
-                  ),
+                  child: Icon(Icons.settings, color: Colors.white, size: 20.0),
                 ),
               ),
             ],
@@ -761,6 +716,12 @@ class _GameScreenState extends State<GameScreen> {
     GameViewModel viewModel,
     List<List<String?>> grid,
   ) {
+    // Use the actual grid size from JSON instead of calculating from word positions
+    int gridRows = viewModel.game.gridRows;
+    int gridCols = viewModel.game.gridCols;
+
+    print('Building grid with size: ${gridCols}x$gridRows from JSON');
+
     // Build a set of all unique positions from all words
     Set<String> allPositions = {};
     Map<String, String> positionToLetter = {};
@@ -780,136 +741,95 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    if (allPositions.isEmpty) {
-      return Container(
-        padding: EdgeInsets.all(
-          ResponsiveHelper.getResponsiveLargeSpacing(context),
-        ),
-        child: Text(
-          'Grid boş',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
-            color: Colors.white70,
-          ),
-        ),
-      );
-    }
+    // Use the actual grid dimensions from JSON
+    int gridWidth = gridCols;
+    int gridHeight = gridRows;
 
-    // Calculate grid bounds from all positions
-    int minRow = 999999;
-    int maxRow = -999999;
-    int minCol = 999999;
-    int maxCol = -999999;
+    // Dynamic grid sizing with better proportions
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isLandscape = screenWidth > screenHeight;
 
-    for (String positionKey in allPositions) {
-      List<String> coords = positionKey.split(',');
-      int row = int.parse(coords[0]);
-      int col = int.parse(coords[1]);
+    // Use more available space for grid with responsive sizing
+    double availableGridWidth =
+        screenWidth * 0.98; // Use almost all screen width
+    double availableGridHeight = screenHeight * 0.5; // Use more vertical space
 
-      minRow = min(minRow, row);
-      maxRow = max(maxRow, row);
-      minCol = min(minCol, col);
-      maxCol = max(maxCol, col);
-    }
+    // Calculate optimal cell size based on grid dimensions and available space
+    double cellSizeFromWidth = availableGridWidth / gridWidth;
+    double cellSizeFromHeight = availableGridHeight / gridHeight;
 
-    // Calculate grid dimensions
-    int gridWidth = maxCol - minCol + 1;
-    int gridHeight = maxRow - minRow + 1;
+    // Use the smaller of the two to ensure grid fits
+    double cellSize = min(cellSizeFromWidth, cellSizeFromHeight);
 
-    // Use optimized grid cell size for better space utilization
-    double cellSize = ResponsiveHelper.getOptimizedGridCellSize(
-      context,
-      gridWidth,
-      gridHeight,
+    // Ensure reasonable cell sizes with responsive limits
+    cellSize = cellSize.clamp(
+      screenWidth * 0.08, // Larger minimum cell size
+      screenWidth * 0.15, // Larger maximum cell size
     );
 
-    // Use optimal spacing based on cell size
-    double cellSpacing = ResponsiveHelper.getOptimalGridSpacing(
-      context,
-      cellSize,
-    );
+    // Add responsive spacing between cells
+    double cellSpacing =
+        screenWidth * 0.01; // Fixed spacing based on screen width
     double totalCellSize = cellSize + cellSpacing;
 
     // Calculate total grid dimensions
     double totalGridWidth = gridWidth * totalCellSize - cellSpacing;
     double totalGridHeight = gridHeight * totalCellSize - cellSpacing;
 
-    // Get available space for grid with more aggressive utilization
-    final availableWidth = ResponsiveHelper.getAvailableWidth(context);
-    final availableHeight = ResponsiveHelper.getAvailableHeight(context);
-    final shouldUseHorizontalLayout =
-        ResponsiveHelper.shouldUseHorizontalLayout(context);
-
-    // More aggressive space utilization to minimize gaps
-    double maxGridWidth = shouldUseHorizontalLayout
-        ? availableWidth *
-              0.85 // Increased from 0.8
-        : availableWidth * 0.98; // Increased from 0.95
-    double maxGridHeight = shouldUseHorizontalLayout
-        ? availableHeight *
-              0.65 // Increased from 0.6
-        : availableHeight * 0.58; // Increased from 0.55
-
-    // Scale grid if it's too large (additional safety scaling)
+    // Check for overflow and apply scale factor if needed - less aggressive scaling
     double scaleFactor = 1.0;
-    if (totalGridWidth > maxGridWidth || totalGridHeight > maxGridHeight) {
-      double widthScale = maxGridWidth / totalGridWidth;
-      double heightScale = maxGridHeight / totalGridHeight;
-      scaleFactor = min(widthScale, heightScale);
+    if (totalGridWidth > availableGridWidth ||
+        totalGridHeight > availableGridHeight) {
+      double widthScale = availableGridWidth / totalGridWidth;
+      double heightScale = availableGridHeight / totalGridHeight;
+      scaleFactor =
+          min(widthScale, heightScale) * 0.98; // Only 2% safety margin
     }
 
-    // Apply scale factor
-    double scaledCellSize = cellSize * scaleFactor;
-    double scaledCellSpacing = cellSpacing * scaleFactor;
-    double scaledTotalCellSize = scaledCellSize + scaledCellSpacing;
+    // Apply scale factor to prevent overflow
+    double finalCellSize = cellSize * scaleFactor;
+    double finalCellSpacing = cellSpacing * scaleFactor;
+    double finalTotalCellSize = finalCellSize + finalCellSpacing;
 
-    double scaledTotalGridWidth =
-        gridWidth * scaledTotalCellSize - scaledCellSpacing;
-    double scaledTotalGridHeight =
-        gridHeight * scaledTotalCellSize - scaledCellSpacing;
+    double finalTotalGridWidth =
+        gridWidth * finalTotalCellSize - finalCellSpacing;
+    double finalTotalGridHeight =
+        gridHeight * finalTotalCellSize - finalCellSpacing;
 
-    // Create optimized grid with proper centering and minimal gaps
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: maxGridWidth,
-        maxHeight: maxGridHeight,
-      ),
+    // Create grid with only cells that have letters
+    return SizedBox(
+      width: availableGridWidth,
+      height: availableGridHeight,
       child: Center(
         child: Container(
-          width: scaledTotalGridWidth,
-          height: scaledTotalGridHeight,
-          decoration: BoxDecoration(
-            // Optional: Add a subtle background for debugging
-            // color: Colors.black.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
+          width: finalTotalGridWidth,
+          height: finalTotalGridHeight,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
           child: Stack(
             children: allPositions.map((positionKey) {
               List<String> coords = positionKey.split(',');
-              int originalRow = int.parse(coords[0]);
-              int originalCol = int.parse(coords[1]);
+              int row = int.parse(coords[0]);
+              int col = int.parse(coords[1]);
 
-              // Calculate offset positions (normalize to 0,0)
-              int offsetRow = originalRow - minRow;
-              int offsetCol = originalCol - minCol;
-
-              // Calculate pixel positions
-              double left = offsetCol * scaledTotalCellSize;
-              double top = offsetRow * scaledTotalCellSize;
-
-              String letter = positionToLetter[positionKey] ?? '?';
+              String letter = positionToLetter[positionKey] ?? '';
               bool isPartOfFoundWord = _isPositionInFoundWord(
                 viewModel,
-                originalRow,
-                originalCol,
+                row,
+                col,
               );
+
+              // Calculate pixel positions
+              double left = col * finalTotalCellSize;
+              double top = row * finalTotalCellSize;
 
               return Positioned(
                 left: left,
                 top: top,
                 child: Container(
-                  width: scaledCellSize,
-                  height: scaledCellSize,
+                  width: finalCellSize,
+                  height: finalCellSize,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -926,27 +846,19 @@ class _GameScreenState extends State<GameScreen> {
                               Colors.grey.shade200,
                             ],
                     ),
-                    borderRadius: BorderRadius.circular(
-                      ResponsiveHelper.getResponsiveBorderRadius(context) *
-                          scaleFactor,
-                    ),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
                     border: Border.all(
                       color: isPartOfFoundWord
                           ? Colors.green.shade300
                           : Colors.grey.shade300,
-                      width: 1.5 * scaleFactor,
+                      width: screenWidth * 0.002,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 6 * scaleFactor,
-                        offset: Offset(0, 3 * scaleFactor),
-                        spreadRadius: 1 * scaleFactor,
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.1),
-                        blurRadius: 2 * scaleFactor,
-                        offset: Offset(0, -1 * scaleFactor),
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                        spreadRadius: 0.5,
                       ),
                     ],
                   ),
@@ -957,15 +869,18 @@ class _GameScreenState extends State<GameScreen> {
                         color: isPartOfFoundWord
                             ? Colors.white
                             : Colors.black87,
-                        fontSize: (scaledCellSize * 0.6).clamp(16.0, 32.0),
+                        fontSize: (screenWidth * 0.04).clamp(
+                          screenWidth * 0.03,
+                          screenWidth * 0.06,
+                        ),
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.3,
                         shadows: isPartOfFoundWord
                             ? [
                                 Shadow(
                                   color: Colors.black.withOpacity(0.3),
                                   offset: Offset(1, 1),
-                                  blurRadius: 2,
+                                  blurRadius: 1,
                                 ),
                               ]
                             : null,
@@ -1002,37 +917,21 @@ class _GameScreenState extends State<GameScreen> {
     required BuildContext context,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveHelper.getResponsiveSpacing(context),
-        vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(context),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(
-          ResponsiveHelper.getResponsiveBorderRadius(context),
-        ),
+        borderRadius: BorderRadius.circular(10.0),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: iconColor,
-            size: ResponsiveHelper.getResponsiveIconSize(
-              context,
-              mobile: 18.0,
-              tablet: 22.0,
-              desktop: 26.0,
-            ),
-          ),
-          SizedBox(
-            width: ResponsiveHelper.getResponsiveSpacing(context) * 0.75,
-          ),
+          Icon(icon, color: iconColor, size: 20.0),
+          SizedBox(width: 12.0 * 0.75),
           Text(
             value,
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              fontSize: 12.0,
             ),
           ),
         ],
@@ -1054,9 +953,7 @@ class _GameScreenState extends State<GameScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        margin: EdgeInsets.only(
-          bottom: ResponsiveHelper.getResponsiveSpacing(context),
-        ),
+        margin: EdgeInsets.only(bottom: 12.0),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -1078,25 +975,13 @@ class _GameScreenState extends State<GameScreen> {
             borderRadius: BorderRadius.circular(20),
             onTap: onTap,
             child: Container(
-              padding: EdgeInsets.all(
-                ResponsiveHelper.getResponsiveLargeSpacing(context),
-              ),
+              padding: EdgeInsets.all(24.0),
               child: Row(
                 children: [
                   // Icon container
                   Container(
-                    width: ResponsiveHelper.getResponsiveIconSize(
-                      context,
-                      mobile: 55.0,
-                      tablet: 65.0,
-                      desktop: 75.0,
-                    ),
-                    height: ResponsiveHelper.getResponsiveIconSize(
-                      context,
-                      mobile: 55.0,
-                      tablet: 65.0,
-                      desktop: 75.0,
-                    ),
+                    width: 65.0,
+                    height: 65.0,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(16),
@@ -1112,21 +997,10 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: ResponsiveHelper.getResponsiveIconSize(
-                        context,
-                        mobile: 26.0,
-                        tablet: 30.0,
-                        desktop: 34.0,
-                      ),
-                    ),
+                    child: Icon(icon, color: iconColor, size: 26.0),
                   ),
 
-                  SizedBox(
-                    width: ResponsiveHelper.getResponsiveSpacing(context),
-                  ),
+                  SizedBox(width: 12.0),
 
                   // Text content
                   Expanded(
@@ -1136,26 +1010,16 @@ class _GameScreenState extends State<GameScreen> {
                         Text(
                           label,
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveSubtitleFontSize(
-                                  context,
-                                ),
+                            fontSize: 14.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(
-                          height:
-                              ResponsiveHelper.getResponsiveSpacing(context) *
-                              0.5,
-                        ),
+                        SizedBox(height: 12.0 * 0.5),
                         Text(
                           subtitle,
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveCaptionFontSize(
-                                  context,
-                                ),
+                            fontSize: 10.0,
                             color: Colors.white.withOpacity(0.8),
                           ),
                         ),
@@ -1165,9 +1029,7 @@ class _GameScreenState extends State<GameScreen> {
 
                   // Arrow icon
                   Container(
-                    padding: EdgeInsets.all(
-                      ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
-                    ),
+                    padding: EdgeInsets.all(12.0 * 0.5),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -1175,12 +1037,7 @@ class _GameScreenState extends State<GameScreen> {
                     child: Icon(
                       Icons.arrow_forward_ios,
                       color: Colors.white,
-                      size: ResponsiveHelper.getResponsiveIconSize(
-                        context,
-                        mobile: 16.0,
-                        tablet: 18.0,
-                        desktop: 20.0,
-                      ),
+                      size: 16.0,
                     ),
                   ),
                 ],
@@ -1206,9 +1063,7 @@ class _GameScreenState extends State<GameScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(
-          ResponsiveHelper.getResponsiveLargeSpacing(context),
-        ),
+        padding: EdgeInsets.all(24.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1224,36 +1079,17 @@ class _GameScreenState extends State<GameScreen> {
           children: [
             // Icon container
             Container(
-              width: ResponsiveHelper.getResponsiveIconSize(
-                context,
-                mobile: 50.0,
-                tablet: 60.0,
-                desktop: 70.0,
-              ),
-              height: ResponsiveHelper.getResponsiveIconSize(
-                context,
-                mobile: 50.0,
-                tablet: 60.0,
-                desktop: 70.0,
-              ),
+              width: 50.0,
+              height: 50.0,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: iconColor.withOpacity(0.3), width: 2),
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: ResponsiveHelper.getResponsiveIconSize(
-                  context,
-                  mobile: 24.0,
-                  tablet: 28.0,
-                  desktop: 32.0,
-                ),
-              ),
+              child: Icon(icon, color: iconColor, size: 24.0),
             ),
 
-            SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+            SizedBox(width: 12.0),
 
             // Text content
             Expanded(
@@ -1263,23 +1099,16 @@ class _GameScreenState extends State<GameScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
-                        context,
-                      ),
+                      fontSize: 14.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(
-                    height:
-                        ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
-                  ),
+                  SizedBox(height: 12.0 * 0.5),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
-                        context,
-                      ),
+                      fontSize: 10.0,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -1291,12 +1120,7 @@ class _GameScreenState extends State<GameScreen> {
             Icon(
               Icons.arrow_forward_ios,
               color: Colors.grey.shade400,
-              size: ResponsiveHelper.getResponsiveIconSize(
-                context,
-                mobile: 16.0,
-                tablet: 18.0,
-                desktop: 20.0,
-              ),
+              size: 16.0,
             ),
           ],
         ),
@@ -1319,9 +1143,7 @@ class _GameScreenState extends State<GameScreen> {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            width: ResponsiveHelper.isTablet(context)
-                ? MediaQuery.of(context).size.width * 0.4
-                : MediaQuery.of(context).size.width * 0.8,
+            width: MediaQuery.of(context).size.width * 0.4,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
@@ -1339,9 +1161,7 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 // Header
                 Container(
-                  padding: EdgeInsets.all(
-                    ResponsiveHelper.getResponsiveLargeSpacing(context),
-                  ),
+                  padding: EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -1356,9 +1176,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(
-                          ResponsiveHelper.getResponsiveSpacing(context),
-                        ),
+                        padding: EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -1366,20 +1184,15 @@ class _GameScreenState extends State<GameScreen> {
                         child: Icon(
                           Icons.warning_amber_rounded,
                           color: Colors.white,
-                          size: ResponsiveHelper.getResponsiveIconSize(context),
+                          size: 20.0,
                         ),
                       ),
-                      SizedBox(
-                        width: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
+                      SizedBox(width: 12.0),
                       Expanded(
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveTitleFontSize(
-                                  context,
-                                ),
+                            fontSize: 20.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -1391,15 +1204,11 @@ class _GameScreenState extends State<GameScreen> {
 
                 // Content
                 Container(
-                  padding: EdgeInsets.all(
-                    ResponsiveHelper.getResponsiveLargeSpacing(context),
-                  ),
+                  padding: EdgeInsets.all(24.0),
                   child: Text(
                     message,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
-                        context,
-                      ),
+                      fontSize: 12.0,
                       color: Colors.grey.shade700,
                       height: 1.5,
                     ),
@@ -1409,9 +1218,7 @@ class _GameScreenState extends State<GameScreen> {
 
                 // Actions
                 Container(
-                  padding: EdgeInsets.all(
-                    ResponsiveHelper.getResponsiveLargeSpacing(context),
-                  ),
+                  padding: EdgeInsets.all(24.0),
                   child: Row(
                     children: [
                       Expanded(
@@ -1421,11 +1228,7 @@ class _GameScreenState extends State<GameScreen> {
                             Navigator.of(context).pop(false);
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: ResponsiveHelper.getResponsiveSpacing(
-                                context,
-                              ),
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: 12.0),
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(16),
@@ -1433,10 +1236,7 @@ class _GameScreenState extends State<GameScreen> {
                             child: Text(
                               'İptal',
                               style: TextStyle(
-                                fontSize:
-                                    ResponsiveHelper.getResponsiveBodyFontSize(
-                                      context,
-                                    ),
+                                fontSize: 12.0,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey.shade700,
                               ),
@@ -1445,9 +1245,7 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: ResponsiveHelper.getResponsiveSpacing(context),
-                      ),
+                      SizedBox(width: 12.0),
                       Expanded(
                         child: GestureDetector(
                           onTap: () async {
@@ -1455,11 +1253,7 @@ class _GameScreenState extends State<GameScreen> {
                             Navigator.of(context).pop(true);
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: ResponsiveHelper.getResponsiveSpacing(
-                                context,
-                              ),
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: 12.0),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -1479,10 +1273,7 @@ class _GameScreenState extends State<GameScreen> {
                             child: Text(
                               confirmText,
                               style: TextStyle(
-                                fontSize:
-                                    ResponsiveHelper.getResponsiveBodyFontSize(
-                                      context,
-                                    ),
+                                fontSize: 12.0,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -1521,17 +1312,14 @@ class _GameScreenState extends State<GameScreen> {
           title: Text(
             title,
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontSize: 20.0,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
           content: Text(
             message,
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12.0, color: Colors.grey.shade700),
           ),
           actions: [
             TextButton(
@@ -1541,10 +1329,7 @@ class _GameScreenState extends State<GameScreen> {
               },
               child: Text(
                 'İptal',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12.0, color: Colors.grey.shade600),
               ),
             ),
             TextButton(
@@ -1555,10 +1340,7 @@ class _GameScreenState extends State<GameScreen> {
               style: TextButton.styleFrom(foregroundColor: confirmColor),
               child: Text(
                 confirmText,
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -1580,18 +1362,8 @@ class _GameScreenState extends State<GameScreen> {
       child: Column(
         children: [
           Container(
-            width: ResponsiveHelper.getResponsiveIconSize(
-              context,
-              mobile: 60.0,
-              tablet: 80.0,
-              desktop: 100.0,
-            ),
-            height: ResponsiveHelper.getResponsiveIconSize(
-              context,
-              mobile: 60.0,
-              tablet: 80.0,
-              desktop: 100.0,
-            ),
+            width: MediaQuery.of(context).size.width * 0.15,
+            height: MediaQuery.of(context).size.width * 0.15,
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
@@ -1605,19 +1377,14 @@ class _GameScreenState extends State<GameScreen> {
             child: Icon(
               icon,
               color: iconColor,
-              size: ResponsiveHelper.getResponsiveIconSize(
-                context,
-                mobile: 28.0,
-                tablet: 36.0,
-                desktop: 44.0,
-              ),
+              size: MediaQuery.of(context).size.width * 0.07,
             ),
           ),
-          SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+          SizedBox(height: 12.0),
           Text(
             label,
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(context),
+              fontSize: 10.0,
               fontWeight: FontWeight.bold,
               color: backgroundColor == Colors.white
                   ? const Color(0xFF4c51bf)
@@ -1641,39 +1408,37 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildSelectedWordOverlay(BuildContext context, String selectedWord) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Center(
       child: Container(
-        margin: EdgeInsets.symmetric(
-          horizontal: ResponsiveHelper.getResponsivePadding(context),
-        ),
+        margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
         padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveHelper.getResponsiveLargeSpacing(context),
-          vertical: ResponsiveHelper.getResponsiveSpacing(context),
+          horizontal: screenWidth * 0.06,
+          vertical: screenHeight * 0.015,
         ),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(
-            ResponsiveHelper.getResponsiveBorderRadius(context),
-          ),
+          borderRadius: BorderRadius.circular(screenWidth * 0.02),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              blurRadius: screenWidth * 0.02,
+              offset: Offset(0, screenHeight * 0.005),
             ),
           ],
         ),
         child: Text(
           selectedWord,
           style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-              context,
-              mobile: 20.0,
-              tablet: 28.0,
-              desktop: 36.0,
+            fontSize: (screenWidth * 0.05).clamp(
+              screenWidth * 0.04,
+              screenWidth * 0.08,
             ),
             fontWeight: FontWeight.bold,
             color: Colors.black87,
+            letterSpacing: 1.0,
           ),
         ),
       ),
@@ -1685,17 +1450,15 @@ class _GameScreenState extends State<GameScreen> {
     GameViewModel viewModel,
     List<String> letters,
   ) {
-    final isLandscape = ResponsiveHelper.isLandscape(context);
-    final shouldUseCompactLayout = ResponsiveHelper.shouldUseCompactLayout(
-      context,
-    );
-    final shouldUseHorizontalLayout =
-        ResponsiveHelper.shouldUseHorizontalLayout(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isLandscape = screenWidth > screenHeight;
+    final shouldUseCompactLayout = isSmallScreen || isLandscape;
+    final shouldUseHorizontalLayout = isLandscape && screenWidth > 900;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveHelper.getResponsivePadding(context),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1719,21 +1482,17 @@ class _GameScreenState extends State<GameScreen> {
                 },
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveHelper.getResponsiveSpacing(context),
-                    vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(
-                      context,
-                    ),
+                    horizontal: screenWidth * 0.03,
+                    vertical: screenHeight * 0.015,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.amber.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(
-                      ResponsiveHelper.getResponsiveBorderRadius(context),
-                    ),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        blurRadius: screenWidth * 0.01,
+                        offset: Offset(0, screenHeight * 0.002),
                       ),
                     ],
                   ),
@@ -1743,21 +1502,15 @@ class _GameScreenState extends State<GameScreen> {
                       Icon(
                         Icons.lightbulb,
                         color: Colors.white,
-                        size: ResponsiveHelper.getResponsiveIconSize(context),
+                        size: screenWidth * 0.05,
                       ),
-                      SizedBox(
-                        width:
-                            ResponsiveHelper.getResponsiveSpacing(context) *
-                            0.5,
-                      ),
+                      SizedBox(width: screenWidth * 0.01),
                       Text(
                         'İpucu',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
-                            context,
-                          ),
+                          fontSize: screenWidth * 0.03,
                         ),
                       ),
                     ],
@@ -1766,111 +1519,106 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+          SizedBox(height: screenHeight * 0.015),
 
-          // Dynamic letter circle with responsive sizing
+          // Responsive letter circle positioned at bottom with gesture handling
           Center(
-            child: SizedBox(
-              width: _getDynamicLetterCircleSize(context, letters.length),
-              height: _getDynamicLetterCircleSize(context, letters.length),
-              child: GestureDetector(
-                onPanStart: (details) {
-                  _handlePanStart(details.localPosition, context);
-                },
-                onPanUpdate: (details) {
-                  _handlePanUpdate(details.localPosition, context);
-                },
-                onPanEnd: (details) {
-                  _handlePanEnd(context);
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Main circle background with transparency
-                    Container(
-                      width: _getDynamicLetterCircleSize(
-                        context,
-                        letters.length,
-                      ),
-                      height: _getDynamicLetterCircleSize(
-                        context,
-                        letters.length,
-                      ),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                      child: Stack(
-                        children: [
-                          ..._buildDynamicCircleLetters(
-                            letters,
-                            selectedIndexes,
+            child: Builder(
+              builder: (context) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final double circleSize = _getDynamicLetterCircleSize(
+                  context,
+                  letters.length,
+                );
+                return SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  key: _circleKey,
+                  child: GestureDetector(
+                    onPanStart: (details) {
+                      _handlePanStart(details.globalPosition, context);
+                    },
+                    onPanUpdate: (details) {
+                      _handlePanUpdate(details.globalPosition, context);
+                    },
+                    onPanEnd: (details) {
+                      _handlePanEnd(context);
+                    },
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Main circle background with transparency
+                        Container(
+                          width: circleSize,
+                          height: circleSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.6),
                           ),
-                          // Shuffle button in center
-                          Positioned.fill(
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await SoundService.playShuffle();
-                                  viewModel.shuffleLetters();
-                                },
-                                child: Container(
-                                  width:
-                                      ResponsiveHelper.getResponsiveShuffleButtonSize(
-                                        context,
-                                      ) *
-                                      0.5,
-                                  height:
-                                      ResponsiveHelper.getResponsiveShuffleButtonSize(
-                                        context,
-                                      ) *
-                                      0.5,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey.shade400.withOpacity(
-                                      0.8,
-                                    ),
-                                    border: Border.all(
-                                      color: Colors.grey.shade500,
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 3,
-                                        offset: Offset(0, 1),
+                          child: Stack(
+                            children: [
+                              // Letters arranged around the circle
+                              ..._buildDynamicCircleLetters(
+                                letters,
+                                selectedIndexes,
+                              ),
+                              // WOW tarzı shuffle button in center
+                              Positioned.fill(
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      await SoundService.playShuffle();
+                                      viewModel.shuffleLetters();
+                                    },
+                                    child: Container(
+                                      width: screenWidth * 0.05,
+                                      height: screenWidth * 0.05,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey.shade400.withOpacity(
+                                          0.9,
+                                        ),
+                                        border: Border.all(
+                                          color: Colors.grey.shade500,
+                                          width: screenWidth * 0.002,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.2,
+                                            ),
+                                            blurRadius: screenWidth * 0.015,
+                                            offset: Offset(
+                                              0,
+                                              screenWidth * 0.003,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.shuffle,
-                                    color: Colors.grey.shade700,
-                                    size:
-                                        ResponsiveHelper.getResponsiveIconSize(
-                                          context,
-                                        ) *
-                                        0.6,
+                                      child: Icon(
+                                        Icons.shuffle,
+                                        color: Colors.grey.shade700,
+                                        size: screenWidth * 0.03,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    // Custom painter for drawing lines
-                    if (isPanning && linePoints.isNotEmpty)
-                      CustomPaint(
-                        size: Size(
-                          _getDynamicLetterCircleSize(context, letters.length),
-                          _getDynamicLetterCircleSize(context, letters.length),
                         ),
-                        painter: LinePainter(linePoints),
-                      ),
-                  ],
-                ),
-              ),
+                        // Custom painter for drawing connecting lines
+                        if (linePoints.isNotEmpty)
+                          CustomPaint(
+                            size: Size(circleSize, circleSize),
+                            painter: LinePainter(linePoints),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -1878,39 +1626,45 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  // Dynamic letter circle size based on number of letters
+  // Calculate dynamic circle size for responsive design
   double _getDynamicLetterCircleSize(BuildContext context, int letterCount) {
-    final baseSize = ResponsiveHelper.getResponsiveLetterCircleSize(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLandscape = screenWidth > screenHeight;
 
-    // Adjust size based on number of letters
+    // Base size calculation for responsive design
+    double baseSize = screenWidth * 0.6; // Responsive base diameter
+
+    // Adjust size based on number of letters for optimal spacing
     if (letterCount <= 3) {
-      return baseSize * 0.8; // Smaller for few letters
+      return baseSize * 0.85; // Compact for few letters
     } else if (letterCount <= 5) {
-      return baseSize; // Standard size
+      return baseSize * 0.95; // Standard size
     } else if (letterCount <= 7) {
-      return baseSize * 1.1; // Larger for more letters
+      return baseSize; // Full size for many letters
     } else {
-      return baseSize * 1.2; // Even larger for many letters
+      return baseSize * 1.05; // Slightly larger for very many letters
     }
   }
 
-  // Dynamic circle letters with responsive positioning
+  // Build letters arranged in circle using trigonometric positioning
   List<Widget> _buildDynamicCircleLetters(
     List<String> letters,
     List<int> selectedIndexes,
   ) {
+    final screenWidth = MediaQuery.of(context).size.width;
     final double circleSize = _getDynamicLetterCircleSize(
       context,
       letters.length,
     );
     final double center = circleSize / 2;
-    final double radius = circleSize * 0.32;
-    final double letterRadius =
-        ResponsiveHelper.getResponsiveLetterSize(context) * 1.5;
+    final double radius = circleSize * 0.35; // Letter placement radius
+    final double letterRadius = screenWidth * 0.06; // Responsive letter size
     final int total = letters.length;
     List<Widget> widgets = [];
 
     for (int i = 0; i < total; i++) {
+      // Calculate position using trigonometric angle: (2π * i / n)
       final double angle = (2 * pi * i) / letters.length - pi / 2;
       final double x = center + radius * cos(angle) - letterRadius;
       final double y = center + radius * sin(angle) - letterRadius;
@@ -1927,21 +1681,33 @@ class _GameScreenState extends State<GameScreen> {
             decoration: isSelected
                 ? BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.orange.shade600.withOpacity(0.85),
+                    color: Colors.orange.shade600.withOpacity(0.9),
+                    border: Border.all(color: Colors.orange.shade700, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 3,
-                        offset: Offset(0, 1),
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   )
-                : null,
+                : BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
+                    border: Border.all(color: Colors.grey.shade400, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
             child: Center(
               child: Text(
                 letters[i],
                 style: TextStyle(
-                  fontSize: letterRadius * 1.0,
+                  fontSize: letterRadius * 1.2,
                   fontWeight: FontWeight.w900,
                   color: isSelected ? Colors.white : Colors.black87,
                   shadows: isSelected
@@ -1952,7 +1718,13 @@ class _GameScreenState extends State<GameScreen> {
                             blurRadius: 2,
                           ),
                         ]
-                      : null,
+                      : [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.1),
+                            offset: Offset(0.5, 0.5),
+                            blurRadius: 1,
+                          ),
+                        ],
                 ),
               ),
             ),
@@ -1965,7 +1737,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-// Custom painter for drawing lines between letters
+// WOW tarzı CustomPainter - sadece seçilen harfler arasında çizgi çiz
 class LinePainter extends CustomPainter {
   final List<Offset> points;
 
@@ -1975,17 +1747,46 @@ class LinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
+    // WOW tarzı çizgi çizimi - sadece harf merkezleri arasında
     final paint = Paint()
-      ..color = Colors.orange
+      ..color = Colors.orange.shade600
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 6.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    for (int i = 0; i < points.length - 1; i += 2) {
-      if (i + 1 < points.length) {
-        canvas.drawLine(points[i], points[i + 1], paint);
+    // Sadece harf merkezleri arasında çizgi çiz (parmak pozisyonu hariç)
+    final path = Path();
+    if (points.isNotEmpty) {
+      path.moveTo(points.first.dx, points.first.dy);
+      // Sadece harf merkezlerini birleştir (çift indeksler)
+      for (int i = 2; i < points.length; i += 2) {
+        path.lineTo(points[i].dx, points[i].dy);
       }
     }
+
+    // Çizgiyi çiz
+    canvas.drawPath(path, paint);
+
+    // Harf pozisyonlarında nokta çiz
+    final dotPaint = Paint()
+      ..color = Colors.orange.shade700
+      ..style = PaintingStyle.fill;
+
+    // Sadece harf merkezlerinde nokta çiz
+    for (int i = 0; i < points.length; i += 2) {
+      canvas.drawCircle(points[i], 5.0, dotPaint);
+    }
+
+    // WOW tarzı glow efekti
+    final glowPaint = Paint()
+      ..color = Colors.orange.shade400.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 12.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(path, glowPaint);
   }
 
   @override

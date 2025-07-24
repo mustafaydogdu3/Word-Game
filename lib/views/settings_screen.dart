@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/sound_service.dart';
-import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
 import 'main_menu_screen.dart';
 
@@ -75,6 +74,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _resetProgress() async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     // Show confirmation dialog
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -82,21 +84,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              ResponsiveHelper.getResponsiveBorderRadius(context),
-            ),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
           title: Text(
             'Levelleri Sıfırla?',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontSize: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Tüm ilerleme kaybedilecek ve Level 1\'den başlayacaksınız. Emin misiniz?',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
             ),
           ),
           actions: [
@@ -105,7 +107,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 'İptal',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ),
@@ -115,7 +119,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 'Sıfırla',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ),
@@ -139,7 +145,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             content: Text(
               'Leveller başarıyla sıfırlandı! Level 1\'den başlayabilirsiniz.',
               style: TextStyle(
-                fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                fontSize: isSmallScreen
+                    ? screenWidth * 0.04
+                    : screenWidth * 0.035,
               ),
             ),
             backgroundColor: Colors.green,
@@ -151,6 +159,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -162,13 +175,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MaterialPageRoute(builder: (context) => const MainMenuScreen()),
             );
           },
-          icon: const Icon(Icons.home, color: Colors.grey),
+          icon: Icon(
+            Icons.home,
+            color: Colors.grey,
+            size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
+          ),
         ),
-        title: const Text('AYARLAR', style: TextStyle(color: Colors.grey)),
+        title: Text(
+          'AYARLAR',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
+          ),
+        ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(
+            isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.04,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -176,24 +201,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 'AYARLAR',
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.08
+                      : screenWidth * 0.06,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                   letterSpacing: 2.0,
                 ),
               ),
 
-              const SizedBox(height: 48),
+              SizedBox(height: screenHeight * 0.06),
 
               // Ana Menü butonu
               Container(
                 width: double.infinity,
-                height: 56,
+                height: isSmallScreen
+                    ? screenHeight * 0.07
+                    : screenHeight * 0.08,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.blue.shade400, Colors.blue.shade600],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.blue.shade200.withOpacity(0.4),
@@ -204,12 +233,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 child: ElevatedButton.icon(
                   onPressed: _navigateToMainMenu,
-                  icon: const Icon(Icons.menu, color: Colors.white, size: 24),
-                  label: const Text(
+                  icon: Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                    size: isSmallScreen
+                        ? screenWidth * 0.06
+                        : screenWidth * 0.05,
+                  ),
+                  label: Text(
                     'Ana Menü',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: isSmallScreen
+                          ? screenWidth * 0.045
+                          : screenWidth * 0.04,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -217,13 +254,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(
+                        isSmallScreen ? 12 : 16,
+                      ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: screenHeight * 0.04),
 
               // Ses ayarları butonu
               _buildToggleButton(
@@ -234,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: _toggleSound,
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.02),
 
               // Müzik ayarları butonu
               _buildToggleButton(
@@ -245,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: _toggleMusic,
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.02),
 
               // Levelleri Sıfırla butonu
               _buildResetButton(),
@@ -263,12 +302,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool isEnabled,
     required VoidCallback onTap,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     return Container(
       width: double.infinity,
-      height: 72,
+      height: isSmallScreen ? screenHeight * 0.09 : screenHeight * 0.1,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.shade200.withOpacity(0.8),
@@ -283,33 +326,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
+            vertical: isSmallScreen
+                ? screenHeight * 0.02
+                : screenHeight * 0.025,
+          ),
           child: Row(
             children: [
               // İkon container
               Container(
-                width: 40,
-                height: 40,
+                width: isSmallScreen ? screenWidth * 0.1 : screenWidth * 0.08,
+                height: isSmallScreen ? screenWidth * 0.1 : screenWidth * 0.08,
                 decoration: BoxDecoration(
                   color: isEnabled
                       ? Colors.green.shade100
                       : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
                 ),
                 child: Icon(
                   icon,
                   color: isEnabled
                       ? Colors.green.shade600
                       : Colors.grey.shade600,
-                  size: 20,
+                  size: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
                 ),
               ),
 
-              const SizedBox(width: 16),
+              SizedBox(width: screenWidth * 0.04),
 
               // Metin içeriği
               Expanded(
@@ -320,16 +368,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isSmallScreen
+                            ? screenWidth * 0.04
+                            : screenWidth * 0.035,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade800,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: screenHeight * 0.005),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: isSmallScreen
+                            ? screenWidth * 0.035
+                            : screenWidth * 0.03,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -339,13 +391,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Toggle switch
               Container(
-                width: 48,
-                height: 24,
+                width: isSmallScreen ? screenWidth * 0.12 : screenWidth * 0.1,
+                height: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
                 decoration: BoxDecoration(
                   color: isEnabled
                       ? Colors.green.shade400
                       : Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
                 ),
                 child: Stack(
                   children: [
@@ -355,12 +407,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : Alignment.centerLeft,
                       duration: const Duration(milliseconds: 200),
                       child: Container(
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.all(2),
+                        width: isSmallScreen
+                            ? screenWidth * 0.05
+                            : screenWidth * 0.04,
+                        height: isSmallScreen
+                            ? screenWidth * 0.05
+                            : screenWidth * 0.04,
+                        margin: EdgeInsets.all(isSmallScreen ? 2 : 3),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            isSmallScreen ? 8 : 10,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -382,12 +440,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildResetButton() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     return Container(
       width: double.infinity,
-      height: 72,
+      height: isSmallScreen ? screenHeight * 0.09 : screenHeight * 0.1,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.shade200.withOpacity(0.8),
@@ -402,29 +464,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
+            vertical: isSmallScreen
+                ? screenHeight * 0.02
+                : screenHeight * 0.025,
+          ),
           child: Row(
             children: [
               // İkon container
               Container(
-                width: 40,
-                height: 40,
+                width: isSmallScreen ? screenWidth * 0.1 : screenWidth * 0.08,
+                height: isSmallScreen ? screenWidth * 0.1 : screenWidth * 0.08,
                 decoration: BoxDecoration(
                   color: Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
                 ),
                 child: Icon(
                   Icons.refresh,
                   color: Colors.red.shade600,
-                  size: 20,
+                  size: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
                 ),
               ),
 
-              const SizedBox(width: 16),
+              SizedBox(width: screenWidth * 0.04),
 
               // Metin içeriği
               Expanded(
@@ -435,16 +502,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Levelleri Sıfırla',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isSmallScreen
+                            ? screenWidth * 0.04
+                            : screenWidth * 0.035,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade800,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: screenHeight * 0.005),
                     Text(
                       'Tüm seviyeleri baştan başla',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: isSmallScreen
+                            ? screenWidth * 0.035
+                            : screenWidth * 0.03,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -456,7 +527,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Icon(
                 Icons.arrow_forward_ios,
                 color: Colors.grey.shade400,
-                size: 16,
+                size: isSmallScreen ? screenWidth * 0.04 : screenWidth * 0.035,
               ),
             ],
           ),

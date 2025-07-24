@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:word_game/utils/responsive_helper.dart';
 import 'package:word_game/viewmodels/game_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -86,6 +85,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -107,21 +111,18 @@ class _SplashScreenState extends State<SplashScreen>
                   return Transform.translate(
                     offset: Offset(
                       0,
-                      _textPositionAnimation.value *
-                          MediaQuery.of(context).size.height,
+                      _textPositionAnimation.value * screenHeight,
                     ),
                     child: Column(
                       children: [
                         Text(
                           'WORD',
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveTitleFontSize(
-                                  context,
-                                  mobile: 32.0,
-                                  tablet: 42.0,
-                                  desktop: 52.0,
-                                ),
+                            fontSize: isSmallScreen
+                                ? screenWidth * 0.08
+                                : (isTablet
+                                      ? screenWidth * 0.06
+                                      : screenWidth * 0.05),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             shadows: [
@@ -141,13 +142,11 @@ class _SplashScreenState extends State<SplashScreen>
                         Text(
                           'GAME',
                           style: TextStyle(
-                            fontSize:
-                                ResponsiveHelper.getResponsiveTitleFontSize(
-                                  context,
-                                  mobile: 32.0,
-                                  tablet: 42.0,
-                                  desktop: 52.0,
-                                ),
+                            fontSize: isSmallScreen
+                                ? screenWidth * 0.08
+                                : (isTablet
+                                      ? screenWidth * 0.06
+                                      : screenWidth * 0.05),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             shadows: [
@@ -170,18 +169,14 @@ class _SplashScreenState extends State<SplashScreen>
                 },
               ),
 
-              SizedBox(
-                height: ResponsiveHelper.getResponsiveLargeSpacing(context),
-              ),
+              SizedBox(height: screenHeight * 0.05),
 
               // Progress bar
               AnimatedBuilder(
                 animation: _progressAnimation,
                 builder: (context, child) {
                   return Container(
-                    width:
-                        ResponsiveHelper.getResponsiveButtonWidth(context) *
-                        0.8,
+                    width: screenWidth * 0.6,
                     height: 6,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.3),

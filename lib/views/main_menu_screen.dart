@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/sound_service.dart';
-import '../utils/responsive_helper.dart';
 import '../viewmodels/game_view_model.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -45,20 +44,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   void _showSettingsDialog() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              ResponsiveHelper.getResponsiveBorderRadius(context),
-            ),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
           title: Text(
             'Ayarlar',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontSize: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -68,22 +68,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ListTile(
                 leading: Icon(
                   Icons.refresh,
-                  size: ResponsiveHelper.getResponsiveIconSize(context),
+                  size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
                 ),
                 title: Text(
                   'İlerlemeyi Sıfırla',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
-                      context,
-                    ),
+                    fontSize: isSmallScreen
+                        ? screenWidth * 0.04
+                        : screenWidth * 0.035,
                   ),
                 ),
                 subtitle: Text(
                   'Tüm seviyeleri baştan başla',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
-                      context,
-                    ),
+                    fontSize: isSmallScreen
+                        ? screenWidth * 0.035
+                        : screenWidth * 0.03,
                   ),
                 ),
                 onTap: () {
@@ -94,22 +94,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ListTile(
                 leading: Icon(
                   Icons.info,
-                  size: ResponsiveHelper.getResponsiveIconSize(context),
+                  size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
                 ),
                 title: Text(
                   'Hakkında',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveBodyFontSize(
-                      context,
-                    ),
+                    fontSize: isSmallScreen
+                        ? screenWidth * 0.04
+                        : screenWidth * 0.035,
                   ),
                 ),
                 subtitle: Text(
                   'Kelime Oyunu v1.0',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
-                      context,
-                    ),
+                    fontSize: isSmallScreen
+                        ? screenWidth * 0.035
+                        : screenWidth * 0.03,
                   ),
                 ),
                 onTap: () {
@@ -124,7 +124,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Text(
                 'Kapat',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ),
@@ -135,6 +137,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _resetProgress() async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     // Show confirmation dialog
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -142,21 +147,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              ResponsiveHelper.getResponsiveBorderRadius(context),
-            ),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
           title: Text(
             'İlerlemeyi Sıfırla?',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveTitleFontSize(context),
+              fontSize: isSmallScreen ? screenWidth * 0.05 : screenWidth * 0.04,
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Tüm ilerleme kaybedilecek ve Level 1\'den başlayacaksınız. Emin misiniz?',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
             ),
           ),
           actions: [
@@ -165,7 +170,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Text(
                 'İptal',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ),
@@ -175,7 +182,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Text(
                 'Sıfırla',
                 style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.04
+                      : screenWidth * 0.035,
                 ),
               ),
             ),
@@ -205,7 +214,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           content: Text(
             'İlerleme başarıyla sıfırlandı! Level 1\'den başlayabilirsiniz.',
             style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
             ),
           ),
           backgroundColor: Colors.green,
@@ -217,12 +228,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context);
-    final isLandscape = ResponsiveHelper.isLandscape(context);
-    final isTablet = ResponsiveHelper.isTablet(context);
-    final isDesktop = ResponsiveHelper.isDesktop(context);
-    final isLargeDesktop = ResponsiveHelper.isLargeDesktop(context);
-    final shouldUseHorizontalLayout =
-        ResponsiveHelper.shouldUseHorizontalLayout(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+    final isLandscape = screenWidth > screenHeight;
+    final shouldUseHorizontalLayout = isLandscape && screenWidth > 900;
 
     // Update current level from viewModel
     currentLevel = viewModel.game.currentLevel;
@@ -259,10 +270,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildTopSection(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveHelper.getResponsivePadding(context),
-        vertical: ResponsiveHelper.getResponsiveSpacing(context),
+        horizontal: isSmallScreen ? screenWidth * 0.04 : screenWidth * 0.03,
+        vertical: isSmallScreen ? screenWidth * 0.03 : screenWidth * 0.025,
       ),
       child: Row(
         children: [
@@ -276,7 +290,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 backgroundColor: Colors.black87,
                 context: context,
               ),
-              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              SizedBox(
+                width: isSmallScreen ? screenWidth * 0.02 : screenWidth * 0.015,
+              ),
               _buildScoreBox(
                 icon: Icons.water_drop,
                 value: '10',
@@ -296,8 +312,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               Navigator.pushNamed(context, '/settings');
             },
             child: Container(
-              width: ResponsiveHelper.getResponsiveSettingsButtonSize(context),
-              height: ResponsiveHelper.getResponsiveSettingsButtonSize(context),
+              width: isSmallScreen ? screenWidth * 0.12 : screenWidth * 0.08,
+              height: isSmallScreen ? screenWidth * 0.12 : screenWidth * 0.08,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.black87, Colors.black54],
@@ -320,7 +336,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Icon(
                 Icons.settings,
                 color: Colors.white,
-                size: ResponsiveHelper.getResponsiveIconSize(context),
+                size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
               ),
             ),
           ),
@@ -330,20 +346,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildVerticalLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     return Padding(
-      padding: ResponsiveHelper.getResponsiveMargin(context),
+      padding: EdgeInsets.all(
+        isSmallScreen ? screenWidth * 0.04 : screenWidth * 0.03,
+      ),
       child: Column(
         children: [
           // Top spacing
-          SizedBox(
-            height: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
-          ),
+          SizedBox(height: screenHeight * 0.05),
 
           // Game title at top
           _buildGameTitle(context),
 
           // Spacing between title and level circle
-          SizedBox(height: ResponsiveHelper.getResponsiveLargeSpacing(context)),
+          SizedBox(height: screenHeight * 0.04),
 
           // Level circle right below the title
           _buildLevelInfo(context),
@@ -355,15 +375,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           _buildPlayButton(context),
 
           // Bottom spacing
-          SizedBox(height: ResponsiveHelper.getResponsiveLargeSpacing(context)),
+          SizedBox(height: screenHeight * 0.04),
         ],
       ),
     );
   }
 
   Widget _buildHorizontalLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     return Padding(
-      padding: ResponsiveHelper.getResponsiveMargin(context),
+      padding: EdgeInsets.all(
+        isSmallScreen ? screenWidth * 0.04 : screenWidth * 0.03,
+      ),
       child: Row(
         children: [
           // Left side - Game title
@@ -376,16 +402,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ),
           ),
 
-          SizedBox(
-            width: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
-          ),
+          SizedBox(width: screenWidth * 0.05),
 
           // Center - Level info
           Expanded(flex: 1, child: Center(child: _buildLevelInfo(context))),
 
-          SizedBox(
-            width: ResponsiveHelper.getResponsiveExtraLargeSpacing(context),
-          ),
+          SizedBox(width: screenWidth * 0.05),
 
           // Right side - Play button
           Expanded(flex: 1, child: Center(child: _buildPlayButton(context))),
@@ -395,17 +417,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildGameTitle(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+
     return Column(
       children: [
         Text(
           'WORD',
           style: GoogleFonts.pressStart2p(
-            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-              context,
-              mobile: 32.0,
-              tablet: 42.0,
-              desktop: 52.0,
-            ),
+            fontSize: isSmallScreen
+                ? screenWidth * 0.08
+                : (isTablet ? screenWidth * 0.06 : screenWidth * 0.05),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             shadows: [
@@ -425,12 +448,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         Text(
           'GAME',
           style: GoogleFonts.pressStart2p(
-            fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-              context,
-              mobile: 32.0,
-              tablet: 42.0,
-              desktop: 52.0,
-            ),
+            fontSize: isSmallScreen
+                ? screenWidth * 0.08
+                : (isTablet ? screenWidth * 0.06 : screenWidth * 0.05),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             shadows: [
@@ -452,7 +472,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildLevelInfo(BuildContext context) {
-    final circleSize = ResponsiveHelper.getResponsiveButtonWidth(context) * 0.6;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+    final circleSize = isSmallScreen
+        ? screenWidth * 0.4
+        : (isTablet ? screenWidth * 0.25 : screenWidth * 0.3);
 
     return Container(
       width: circleSize,
@@ -477,12 +502,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             Text(
               '$currentLevel',
               style: GoogleFonts.orbitron(
-                fontSize: ResponsiveHelper.getResponsiveTitleFontSize(
-                  context,
-                  mobile: 32.0,
-                  tablet: 40.0,
-                  desktop: 48.0,
-                ),
+                fontSize: isSmallScreen
+                    ? screenWidth * 0.08
+                    : (isTablet ? screenWidth * 0.06 : screenWidth * 0.05),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 2.0,
@@ -495,19 +517,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ],
               ),
             ),
-            SizedBox(
-              height: ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
-            ),
+            SizedBox(height: screenWidth * 0.01),
             // YOLCULUK text at bottom
             Text(
               'YOLCULUK',
               style: GoogleFonts.orbitron(
-                fontSize: ResponsiveHelper.getResponsiveCaptionFontSize(
-                  context,
-                  mobile: 12.0,
-                  tablet: 14.0,
-                  desktop: 16.0,
-                ),
+                fontSize: isSmallScreen
+                    ? screenWidth * 0.03
+                    : (isTablet ? screenWidth * 0.025 : screenWidth * 0.02),
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
                 letterSpacing: 1.5,
@@ -527,23 +544,30 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildPlayButton(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+    final isTablet = screenWidth > 768;
+
     return GestureDetector(
       onTap: () async {
         await SoundService.playButtonClick();
         Navigator.of(context).pushReplacementNamed('/game');
       },
       child: Container(
-        width: ResponsiveHelper.getResponsiveButtonWidth(context),
-        height: ResponsiveHelper.getResponsiveButtonHeight(context),
+        width: isSmallScreen
+            ? screenWidth * 0.7
+            : (isTablet ? screenWidth * 0.4 : screenWidth * 0.5),
+        height: isSmallScreen
+            ? screenHeight * 0.08
+            : (isTablet ? screenHeight * 0.1 : screenHeight * 0.09),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF4CAF50), Color(0xFF66BB6A), Color(0xFF81C784)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(
-            ResponsiveHelper.getResponsiveBorderRadius(context),
-          ),
+          borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
           boxShadow: [
             BoxShadow(
@@ -562,9 +586,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(
-                ResponsiveHelper.getResponsiveSpacing(context) * 0.5,
-              ),
+              padding: EdgeInsets.all(screenWidth * 0.01),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
@@ -572,19 +594,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Icon(
                 Icons.play_arrow,
                 color: Colors.white,
-                size: ResponsiveHelper.getResponsiveIconSize(context),
+                size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
               ),
             ),
-            SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+            SizedBox(width: screenWidth * 0.02),
             Text(
               'OYNA',
               style: GoogleFonts.orbitron(
-                fontSize: ResponsiveHelper.getResponsiveSubtitleFontSize(
-                  context,
-                  mobile: 16.0,
-                  tablet: 20.0,
-                  desktop: 24.0,
-                ),
+                fontSize: isSmallScreen
+                    ? screenWidth * 0.04
+                    : (isTablet ? screenWidth * 0.035 : screenWidth * 0.03),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 2.0,
@@ -610,16 +629,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     required Color backgroundColor,
     required BuildContext context,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveHelper.getResponsiveSpacing(context),
-        vertical: ResponsiveHelper.getResponsiveScoreBoxPadding(context),
+        horizontal: screenWidth * 0.02,
+        vertical: screenWidth * 0.015,
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(
-          ResponsiveHelper.getResponsiveBorderRadius(context),
-        ),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
         border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
         boxShadow: [
           BoxShadow(
@@ -632,9 +652,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(
-              ResponsiveHelper.getResponsiveSpacing(context) * 0.3,
-            ),
+            padding: EdgeInsets.all(screenWidth * 0.01),
             decoration: BoxDecoration(
               color: iconColor.withOpacity(0.2),
               shape: BoxShape.circle,
@@ -642,23 +660,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             child: Icon(
               icon,
               color: iconColor,
-              size: ResponsiveHelper.getResponsiveIconSize(
-                context,
-                mobile: 18.0,
-                tablet: 20.0,
-                desktop: 22.0,
-              ),
+              size: isSmallScreen ? screenWidth * 0.045 : screenWidth * 0.04,
             ),
           ),
-          SizedBox(
-            width: ResponsiveHelper.getResponsiveSpacing(context) * 0.75,
-          ),
+          SizedBox(width: screenWidth * 0.015),
           Text(
             value,
             style: GoogleFonts.orbitron(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: ResponsiveHelper.getResponsiveBodyFontSize(context),
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
               letterSpacing: 1.0,
             ),
           ),

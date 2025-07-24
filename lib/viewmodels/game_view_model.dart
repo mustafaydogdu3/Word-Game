@@ -181,10 +181,11 @@ class GameViewModel extends ChangeNotifier {
     });
 
     // Use grid size directly from JSON without limiting
-    int gridCols = puzzle.gridSize?.first ?? 5;
-    int gridRows = puzzle.gridSize?.length == 2
+    // gridSize format is [rows, cols] from JSON
+    int gridRows = puzzle.gridSize?.first ?? 5;
+    int gridCols = puzzle.gridSize?.length == 2
         ? puzzle.gridSize![1]
-        : gridCols;
+        : gridRows;
 
     // For manual placement, use the exact grid size from JSON
     // No need to limit grid size since positions are manually controlled
