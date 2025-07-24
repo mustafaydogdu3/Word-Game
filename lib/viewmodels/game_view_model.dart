@@ -287,7 +287,11 @@ class GameViewModel extends ChangeNotifier {
     if (_isDisposed) return;
 
     _game.letters.shuffle();
-    _safeNotifyListeners();
+
+    // Force immediate notification
+    if (!_isDisposed) {
+      notifyListeners();
+    }
   }
 
   String? getHint() {

@@ -93,7 +93,9 @@ class _GameScreenState extends State<GameScreen> {
           if ((position - letterCenter).distance < touchRadius) {
             if (!selectedIndexes.contains(i)) {
               selectedIndexes.add(i);
-              linePoints.add(localLetterCenter); // Çizim için local koordinat
+              linePoints.add(
+                localLetterCenter,
+              ); // Local koordinat (CustomPainter için)
               SoundService.playWordFound();
             }
             break;
@@ -136,13 +138,15 @@ class _GameScreenState extends State<GameScreen> {
           if ((position - letterCenter).distance < touchRadius) {
             if (!selectedIndexes.contains(i)) {
               selectedIndexes.add(i);
-              linePoints.add(localLetterCenter); // Çizim için local koordinat
+              linePoints.add(
+                localLetterCenter,
+              ); // Local koordinat (CustomPainter için)
               SoundService.playWordFound();
             }
           }
         }
 
-        // WOW tarzı çizgi güncelleme - sadece parmağın pozisyonunu güncelle
+        // WOW tarzı çizgi güncelleme - parmağın pozisyonunu güncelle
         if (linePoints.isNotEmpty) {
           // Son nokta parmağın pozisyonu olsun (local koordinatta)
           final Offset localPosition = position - circleTopLeft;
@@ -524,7 +528,7 @@ class _GameScreenState extends State<GameScreen> {
                 // Selected word display - Positioned above letter circle
                 if (selectedWord.isNotEmpty)
                   Positioned(
-                    bottom: screenHeight * 0.28,
+                    bottom: screenHeight * 0.32,
                     left: 0,
                     right: 0,
                     child: _buildSelectedWordOverlay(context, selectedWord),
@@ -1562,44 +1566,41 @@ class _GameScreenState extends State<GameScreen> {
                                 letters,
                                 selectedIndexes,
                               ),
-                              // WOW tarzı shuffle button in center
+                              // WOW tarzı shuffle button in center - saydam arka plan
                               Positioned.fill(
                                 child: Align(
                                   alignment: Alignment.center,
                                   child: GestureDetector(
                                     onTap: () async {
                                       await SoundService.playShuffle();
+                                      // Shuffle işlemini çalıştır
+                                      final viewModel =
+                                          Provider.of<GameViewModel>(
+                                            context,
+                                            listen: false,
+                                          );
                                       viewModel.shuffleLetters();
+
+                                      // Force UI update
+                                      setState(() {
+                                        // Clear any ongoing selection
+                                        selectedIndexes.clear();
+                                        linePoints.clear();
+                                        isPanning = false;
+                                      });
                                     },
-                                    child: Container(
-                                      width: screenWidth * 0.05,
-                                      height: screenWidth * 0.05,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.grey.shade400.withOpacity(
-                                          0.9,
-                                        ),
-                                        border: Border.all(
-                                          color: Colors.grey.shade500,
-                                          width: screenWidth * 0.002,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.2,
-                                            ),
-                                            blurRadius: screenWidth * 0.015,
-                                            offset: Offset(
-                                              0,
-                                              screenWidth * 0.003,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    child: SizedBox(
+                                      width: screenWidth * 0.12, // Daha büyük
+                                      height: screenWidth * 0.12, // Daha büyük
+
                                       child: Icon(
                                         Icons.shuffle,
-                                        color: Colors.grey.shade700,
-                                        size: screenWidth * 0.03,
+                                        color: Colors
+                                            .grey
+                                            .shade800, // Daha koyu renk
+                                        size:
+                                            screenWidth *
+                                            0.06, // Daha büyük ikon
                                       ),
                                     ),
                                   ),
@@ -1612,7 +1613,10 @@ class _GameScreenState extends State<GameScreen> {
                         if (linePoints.isNotEmpty)
                           CustomPaint(
                             size: Size(circleSize, circleSize),
-                            painter: LinePainter(linePoints),
+                            painter: LinePainter(
+                              linePoints,
+                              screenWidth * 0.06,
+                            ), // Harf yarıçapını geç
                           ),
                       ],
                     ),
@@ -1693,11 +1697,10 @@ class _GameScreenState extends State<GameScreen> {
                   )
                 : BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.8),
-                    border: Border.all(color: Colors.grey.shade400, width: 1),
+
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0),
                         blurRadius: 2,
                         offset: Offset(0, 1),
                       ),
@@ -1737,17 +1740,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-// WOW tarzı CustomPainter - sadece seçilen harfler arasında çizgi çiz
+// WOW tarzı CustomPainter - her segment ayrı ayrı çizilir
 class LinePainter extends CustomPainter {
   final List<Offset> points;
+  final double letterRadius;
 
-  LinePainter(this.points);
+  LinePainter(this.points, this.letterRadius);
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
+    if (points.length < 2) return;
 
-    // WOW tarzı çizgi çizimi - sadece harf merkezleri arasında
+    // WOW tarzı çizgi çizimi - her segment ayrı ayrı
     final paint = Paint()
       ..color = Colors.orange.shade600
       ..style = PaintingStyle.stroke
@@ -1755,40 +1759,92 @@ class LinePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Sadece harf merkezleri arasında çizgi çiz (parmak pozisyonu hariç)
-    final path = Path();
-    if (points.isNotEmpty) {
-      path.moveTo(points.first.dx, points.first.dy);
-      // Sadece harf merkezlerini birleştir (çift indeksler)
-      for (int i = 2; i < points.length; i += 2) {
-        path.lineTo(points[i].dx, points[i].dy);
-      }
-    }
+    // Glow efekti
+    final glowPaint = Paint()
+      ..color = Colors.orange.shade400.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Çizgiyi çiz
-    canvas.drawPath(path, paint);
-
-    // Harf pozisyonlarında nokta çiz
+    // Nokta çizimi için
     final dotPaint = Paint()
       ..color = Colors.orange.shade700
       ..style = PaintingStyle.fill;
 
-    // Sadece harf merkezlerinde nokta çiz
+    // Sadece harf merkezlerini al (çift indeksler)
+    final List<Offset> letterCenters = [];
     for (int i = 0; i < points.length; i += 2) {
-      canvas.drawCircle(points[i], 5.0, dotPaint);
+      if (i < points.length) {
+        letterCenters.add(points[i]);
+      }
     }
 
-    // WOW tarzı glow efekti
-    final glowPaint = Paint()
-      ..color = Colors.orange.shade400.withOpacity(0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    if (letterCenters.length < 2) return;
 
-    canvas.drawPath(path, glowPaint);
+    // Her segment için ayrı çizgi çiz
+    for (int i = 0; i < letterCenters.length - 1; i++) {
+      final currentCenter = letterCenters[i];
+      final nextCenter = letterCenters[i + 1];
+
+      // Mevcut harfin kenar noktasını hesapla
+      final startEdge = _getCircleEdgePoint(currentCenter, nextCenter);
+
+      // Sonraki harfin kenar noktasını hesapla
+      final endEdge = _getCircleEdgePoint(nextCenter, currentCenter);
+
+      // Her segment için ayrı path oluştur
+      final segmentPath = Path();
+      segmentPath.moveTo(startEdge.dx, startEdge.dy);
+      segmentPath.lineTo(endEdge.dx, endEdge.dy);
+
+      // Segment'i çiz (glow ve ana çizgi)
+      canvas.drawPath(segmentPath, glowPaint);
+      canvas.drawPath(segmentPath, paint);
+    }
+
+    // Her harf merkezinde nokta çiz
+    for (int i = 0; i < letterCenters.length; i++) {
+      final currentCenter = letterCenters[i];
+      final nextCenter = i + 1 < letterCenters.length
+          ? letterCenters[i + 1]
+          : null;
+      final prevCenter = i > 0 ? letterCenters[i - 1] : null;
+
+      // Nokta pozisyonunu hesapla
+      Offset dotPosition;
+      if (i == 0) {
+        // İlk harf - sonraki harfe doğru kenar
+        dotPosition = _getCircleEdgePoint(currentCenter, nextCenter!);
+      } else if (i == letterCenters.length - 1) {
+        // Son harf - önceki harfe doğru kenar
+        dotPosition = _getCircleEdgePoint(currentCenter, prevCenter!);
+      } else {
+        // Orta harfler - iki yöne de kenar hesapla ve ortalaması
+        final edge1 = _getCircleEdgePoint(currentCenter, prevCenter!);
+        final edge2 = _getCircleEdgePoint(currentCenter, nextCenter!);
+        dotPosition = Offset(
+          (edge1.dx + edge2.dx) / 2,
+          (edge1.dy + edge2.dy) / 2,
+        );
+      }
+
+      canvas.drawCircle(dotPosition, 5.0, dotPaint);
+    }
+  }
+
+  // Harf çemberinin kenar noktasını hesapla
+  Offset _getCircleEdgePoint(Offset center, Offset towards) {
+    // İki nokta arasındaki yönü hesapla
+    final direction = (towards - center).direction;
+
+    // Harf çemberinin kenarındaki noktayı hesapla
+    return Offset(
+      center.dx + letterRadius * cos(direction),
+      center.dy + letterRadius * sin(direction),
+    );
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
