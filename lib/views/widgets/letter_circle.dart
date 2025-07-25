@@ -7,13 +7,16 @@ import '../../services/sound_service.dart';
 import '../../viewmodels/game_view_model.dart';
 import 'line_painter.dart';
 
-class LetterCircle extends StatefulWidget {
+class LetterCircle extends StatelessWidget {
   final List<String> letters;
   final List<int> selectedIndexes;
   final List<Offset> linePoints;
   final Function(String) onWordSelected;
   final VoidCallback onShuffle;
   final GlobalKey circleKey;
+  // Callbacks for selection state changes
+  final Function(List<int>) onSelectionChanged;
+  final Function(List<Offset>) onLinePointsChanged;
 
   const LetterCircle({
     super.key,
@@ -23,150 +26,135 @@ class LetterCircle extends StatefulWidget {
     required this.onWordSelected,
     required this.onShuffle,
     required this.circleKey,
+    required this.onSelectionChanged,
+    required this.onLinePointsChanged,
   });
 
-  @override
-  State<LetterCircle> createState() => _LetterCircleState();
-}
-
-class _LetterCircleState extends State<LetterCircle> {
-  List<int> selectedIndexes = [];
-  List<Offset> linePoints = [];
-  bool isPanning = false;
-
-  @override
-  void initState() {
-    super.initState();
-    selectedIndexes = List.from(widget.selectedIndexes);
-    linePoints = List.from(widget.linePoints);
-  }
-
-  @override
-  void didUpdateWidget(LetterCircle oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    selectedIndexes = List.from(widget.selectedIndexes);
-    linePoints = List.from(widget.linePoints);
-  }
-
   void _handlePanStart(Offset position, BuildContext context) {
-    setState(() {
-      selectedIndexes.clear();
-      linePoints.clear();
-      isPanning = true;
+    // Clear selection and start new selection
+    final newSelectedIndexes = <int>[];
+    final newLinePoints = <Offset>[];
 
-      // WOW tarzı harf seçimi - global koordinat uyumlu
-      final circleSize = _getDynamicLetterCircleSize(
-        context,
-        widget.letters.length,
-      );
-      final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
-      final center = circleSize / 2;
-      final radius = circleSize * 0.35;
+    // WOW tarzı harf seçimi - global koordinat uyumlu
+    final circleSize = _getDynamicLetterCircleSize(context, letters.length);
+    final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
+    final center = circleSize / 2;
+    final radius = circleSize * 0.35;
 
-      // Global koordinat dönüşümü için RenderBox al
-      final RenderBox? box =
-          widget.circleKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box != null) {
-        final Offset circleTopLeft = box.localToGlobal(Offset.zero);
+    // Global koordinat dönüşümü için RenderBox al
+    final RenderBox? box =
+        circleKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null) {
+      final Offset circleTopLeft = box.localToGlobal(Offset.zero);
 
-        for (int i = 0; i < widget.letters.length; i++) {
-          final double angle = (2 * pi * i) / widget.letters.length - pi / 2;
-          final Offset localLetterCenter = Offset(
-            center + radius * cos(angle),
-            center + radius * sin(angle),
+      for (int i = 0; i < letters.length; i++) {
+        final double angle = (2 * pi * i) / letters.length - pi / 2;
+        final Offset localLetterCenter = Offset(
+          center + radius * cos(angle),
+          center + radius * sin(angle),
+        );
+        // Local koordinatı global koordinata çevir
+        final Offset letterCenter = localLetterCenter + circleTopLeft;
+
+        if ((position - letterCenter).distance < touchRadius) {
+          // İlk harfi ekle - sadece harf pozisyonu
+          newSelectedIndexes.add(i);
+          newLinePoints.add(localLetterCenter); // Sadece harf pozisyonu
+          SoundService.playWordFound();
+
+          print(
+            'LetterCircle: Added first letter ${letters[i]}, selection: ${newSelectedIndexes.map((idx) => letters[idx]).join()}',
           );
-          // Local koordinatı global koordinata çevir
-          final Offset letterCenter = localLetterCenter + circleTopLeft;
 
-          if ((position - letterCenter).distance < touchRadius) {
-            if (!selectedIndexes.contains(i)) {
-              // İlk harfi ekle - sadece harf pozisyonu
-              selectedIndexes.add(i);
-              linePoints.add(localLetterCenter); // Sadece harf pozisyonu
-              SoundService.playWordFound();
-            }
-            break;
-          }
+          // Notify parent of selection change
+          onSelectionChanged(newSelectedIndexes);
+          onLinePointsChanged(newLinePoints);
+          break;
         }
       }
-    });
+    }
   }
 
   void _handlePanUpdate(Offset position, BuildContext context) {
-    if (!isPanning) return;
+    // WOW tarzı harf seçimi - global koordinat uyumlu
+    final circleSize = _getDynamicLetterCircleSize(context, letters.length);
+    final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
+    final center = circleSize / 2;
+    final radius = circleSize * 0.35;
 
-    setState(() {
-      // WOW tarzı harf seçimi - global koordinat uyumlu
-      final circleSize = _getDynamicLetterCircleSize(
-        context,
-        widget.letters.length,
-      );
-      final touchRadius = circleSize * 0.13; // Harf çapına göre ayarlanmış
-      final center = circleSize / 2;
-      final radius = circleSize * 0.35;
+    // Global koordinat dönüşümü için RenderBox al
+    final RenderBox? box =
+        circleKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null) {
+      final Offset circleTopLeft = box.localToGlobal(Offset.zero);
 
-      // Global koordinat dönüşümü için RenderBox al
-      final RenderBox? box =
-          widget.circleKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box != null) {
-        final Offset circleTopLeft = box.localToGlobal(Offset.zero);
+      for (int i = 0; i < letters.length; i++) {
+        final double angle = (2 * pi * i) / letters.length - pi / 2;
+        final Offset localLetterCenter = Offset(
+          center + radius * cos(angle),
+          center + radius * sin(angle),
+        );
+        // Local koordinatı global koordinata çevir
+        final Offset letterCenter = localLetterCenter + circleTopLeft;
 
-        for (int i = 0; i < widget.letters.length; i++) {
-          final double angle = (2 * pi * i) / widget.letters.length - pi / 2;
-          final Offset localLetterCenter = Offset(
-            center + radius * cos(angle),
-            center + radius * sin(angle),
-          );
-          // Local koordinatı global koordinata çevir
-          final Offset letterCenter = localLetterCenter + circleTopLeft;
+        if ((position - letterCenter).distance < touchRadius) {
+          if (!selectedIndexes.contains(i)) {
+            // Yeni harf ekleme - ileri sürükleme
+            final newSelectedIndexes = List<int>.from(selectedIndexes)..add(i);
+            final newLinePoints = List<Offset>.from(linePoints)
+              ..add(localLetterCenter);
+            SoundService.playWordFound();
 
-          if ((position - letterCenter).distance < touchRadius) {
-            if (!selectedIndexes.contains(i)) {
-              // Yeni harf ekleme - ileri sürükleme
-              selectedIndexes.add(i);
-              linePoints.add(localLetterCenter); // Sadece harf pozisyonu
-              SoundService.playWordFound();
-            } else {
-              // Geriye doğru hareket - önceki harfleri kaldır
-              final existingIndex = selectedIndexes.indexOf(i);
-              if (existingIndex < selectedIndexes.length - 1) {
-                // Bu harften sonraki tüm harfleri kaldır
-                final removeCount = selectedIndexes.length - existingIndex - 1;
-                for (int j = 0; j < removeCount; j++) {
-                  selectedIndexes.removeLast();
-                  linePoints.removeLast(); // Harf pozisyonu
-                }
-                SoundService.playError();
-              }
+            print(
+              'LetterCircle: Added letter ${letters[i]}, selection: ${newSelectedIndexes.map((idx) => letters[idx]).join()}',
+            );
+
+            // Notify parent of selection change
+            onSelectionChanged(newSelectedIndexes);
+            onLinePointsChanged(newLinePoints);
+          } else {
+            // Geriye doğru hareket - önceki harfleri kaldır
+            final existingIndex = selectedIndexes.indexOf(i);
+            if (existingIndex < selectedIndexes.length - 1) {
+              // Bu harften sonraki tüm harfleri kaldır
+              final newSelectedIndexes = selectedIndexes.sublist(
+                0,
+                existingIndex + 1,
+              );
+              final newLinePoints = linePoints.sublist(0, existingIndex + 1);
+              SoundService.playError();
+
+              print(
+                'LetterCircle: Removed letters, selection: ${newSelectedIndexes.map((idx) => letters[idx]).join()}',
+              );
+
+              // Notify parent of selection change
+              onSelectionChanged(newSelectedIndexes);
+              onLinePointsChanged(newLinePoints);
             }
-            break; // Sadece bir harf işle
           }
+          // Remove break to allow continuous dragging
         }
       }
-    });
+    }
   }
 
   void _handlePanEnd(BuildContext context) {
-    setState(() {
-      isPanning = false;
-    });
-
     // Working logic: Form word from selected letters
     final selectedWord = selectedIndexes
-        .where((i) => i >= 0 && i < widget.letters.length)
-        .map((i) => widget.letters[i])
+        .where((i) => i >= 0 && i < letters.length)
+        .map((i) => letters[i])
         .join();
 
     if (selectedWord.isNotEmpty) {
       print('Player selected word from circle: "$selectedWord"');
-      widget.onWordSelected(selectedWord);
+      onWordSelected(selectedWord);
     }
 
     // Clear selection for next interaction
-    setState(() {
-      selectedIndexes.clear();
-      linePoints.clear();
-    });
+    print('LetterCircle: Clearing selection');
+    onSelectionChanged([]);
+    onLinePointsChanged([]);
   }
 
   // Calculate dynamic circle size for responsive design
@@ -192,6 +180,7 @@ class _LetterCircleState extends State<LetterCircle> {
 
   // Build letters arranged in circle using trigonometric positioning
   List<Widget> _buildDynamicCircleLetters(
+    BuildContext context,
     List<String> letters,
     List<int> selectedIndexes,
   ) {
@@ -361,12 +350,12 @@ class _LetterCircleState extends State<LetterCircle> {
                 final screenWidth = MediaQuery.of(context).size.width;
                 final double circleSize = _getDynamicLetterCircleSize(
                   context,
-                  widget.letters.length,
+                  letters.length,
                 );
                 return SizedBox(
                   width: circleSize,
                   height: circleSize,
-                  key: widget.circleKey,
+                  key: circleKey,
                   child: GestureDetector(
                     onPanStart: (details) {
                       _handlePanStart(details.globalPosition, context);
@@ -392,7 +381,8 @@ class _LetterCircleState extends State<LetterCircle> {
                             children: [
                               // Letters arranged around the circle
                               ..._buildDynamicCircleLetters(
-                                widget.letters,
+                                context,
+                                letters,
                                 selectedIndexes,
                               ),
                               // WOW tarzı shuffle button in center - saydam arka plan
@@ -402,7 +392,7 @@ class _LetterCircleState extends State<LetterCircle> {
                                   child: GestureDetector(
                                     onTap: () async {
                                       await SoundService.playShuffle();
-                                      widget.onShuffle();
+                                      onShuffle();
                                     },
                                     child: SizedBox(
                                       width: screenWidth * 0.12, // Daha büyük

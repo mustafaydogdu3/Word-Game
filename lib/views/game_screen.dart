@@ -71,6 +71,20 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  // Add callback functions to handle selection state changes
+  void _onSelectionChanged(List<int> newSelectedIndexes) {
+    print('GameScreen: Selection changed to: $newSelectedIndexes');
+    setState(() {
+      selectedIndexes = newSelectedIndexes;
+    });
+  }
+
+  void _onLinePointsChanged(List<Offset> newLinePoints) {
+    setState(() {
+      linePoints = newLinePoints;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context);
@@ -174,6 +188,8 @@ class _GameScreenState extends State<GameScreen> {
                     onWordSelected: _onWordSelected,
                     onShuffle: _onShuffle,
                     circleKey: _circleKey,
+                    onSelectionChanged: _onSelectionChanged,
+                    onLinePointsChanged: _onLinePointsChanged,
                   ),
                 ),
               ],
