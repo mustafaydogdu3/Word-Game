@@ -527,11 +527,20 @@ class _GameScreenState extends State<GameScreen> {
 
                 // Selected word display - Positioned above letter circle
                 if (selectedWord.isNotEmpty)
+                  // Responsive: Overlay'i çemberin tam üstüne hizala
                   Positioned(
-                    bottom: screenHeight * 0.32,
+                    // Çemberin yüksekliğini ve ekran yüksekliğini kullanarak overlay'in konumunu ayarla
+                    bottom:
+                        screenHeight * 0.05 +
+                        _getDynamicLetterCircleSize(context, letters.length) +
+                        screenHeight * 0.025,
                     left: 0,
                     right: 0,
-                    child: _buildSelectedWordOverlay(context, selectedWord),
+                    child: _buildSelectedWordOverlay(
+                      context,
+                      selectedWord,
+                      letters.length,
+                    ),
                   ),
 
                 // Letter circle - Responsive positioning at bottom
@@ -1411,23 +1420,39 @@ class _GameScreenState extends State<GameScreen> {
     return Center(child: _buildOptimizedGrid(context, viewModel, grid));
   }
 
-  Widget _buildSelectedWordOverlay(BuildContext context, String selectedWord) {
+  // Overlay fonksiyonunu güncelle: çemberin genişliğine göre responsive yap
+  Widget _buildSelectedWordOverlay(
+    BuildContext context,
+    String selectedWord, [
+    int? letterCount,
+  ]) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final double circleSize = letterCount != null
+        ? _getDynamicLetterCircleSize(context, letterCount)
+        : screenWidth * 0.6;
+    // Overlay genişliğini çemberin genişliğine göre sınırla
+    final double overlayWidth = circleSize * 0.95;
+    final double overlayPadding = screenWidth * 0.04;
+    final double overlayVerticalPadding = screenHeight * 0.012;
+    final double overlayFontSize = (screenWidth * 0.05).clamp(
+      screenWidth * 0.04,
+      screenWidth * 0.08,
+    );
 
     return Center(
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+        constraints: BoxConstraints(maxWidth: overlayWidth),
         padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.06,
-          vertical: screenHeight * 0.015,
+          horizontal: overlayPadding,
+          vertical: overlayVerticalPadding,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
+          color: Colors.white.withOpacity(0.97),
           borderRadius: BorderRadius.circular(screenWidth * 0.02),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.18),
               blurRadius: screenWidth * 0.02,
               offset: Offset(0, screenHeight * 0.005),
             ),
@@ -1436,14 +1461,13 @@ class _GameScreenState extends State<GameScreen> {
         child: Text(
           selectedWord,
           style: TextStyle(
-            fontSize: (screenWidth * 0.05).clamp(
-              screenWidth * 0.04,
-              screenWidth * 0.08,
-            ),
+            fontSize: overlayFontSize,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
             letterSpacing: 1.0,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
