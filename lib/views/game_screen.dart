@@ -149,12 +149,12 @@ class _GameScreenState extends State<GameScreen> {
                 // Top section with game info - Fixed at top
                 Positioned(top: 0, left: 0, right: 0, child: TopBar()),
 
-                // Grid area - Moved higher up with responsive positioning
+                // Grid area - Exactly 50% of screen height starting from top bar
                 Positioned(
-                  top: screenHeight * 0.08,
+                  top: screenHeight * 0.08, // Top bar height
                   left: 0,
                   right: 0,
-                  bottom: screenHeight * 0.45,
+                  height: screenHeight * 0.42, // 50% - top bar height
                   child: Center(child: WordGrid()),
                 ),
 

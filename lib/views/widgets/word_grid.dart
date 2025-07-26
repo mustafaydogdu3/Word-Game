@@ -14,13 +14,18 @@ class WordGrid extends StatelessWidget {
     final viewModel = Provider.of<GameViewModel>(context);
     final grid = viewModel.game.grid;
 
-    return _buildOptimizedGrid(context, viewModel, grid);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return _buildOptimizedGrid(context, viewModel, grid, constraints);
+      },
+    );
   }
 
   Widget _buildOptimizedGrid(
     BuildContext context,
     GameViewModel viewModel,
     List<List<String?>> grid,
+    BoxConstraints constraints,
   ) {
     // Build a set of all unique positions from all words
     Set<String> allPositions = {};
@@ -72,52 +77,40 @@ class WordGrid extends StatelessWidget {
     int gridWidth = maxCol - minCol + 1;
     int gridHeight = maxRow - minRow + 1;
 
-    // Get screen dimensions
+    // Get screen dimensions and constraints
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isLandscape = screenWidth > screenHeight;
-    final shouldUseHorizontalLayout = isLandscape && screenWidth > 900;
 
-    // Calculate available space for grid - more conservative approach
-    double availableWidth = screenWidth;
-    double availableHeight = screenHeight;
+    // Available space from LayoutBuilder constraints (50% of screen height)
+    final availableWidth = constraints.maxWidth;
+    final availableHeight = constraints.maxHeight;
 
-    // Use more conservative max grid size to prevent overflow
-    double maxGridWidth = shouldUseHorizontalLayout
-        ? availableWidth *
-              0.78 // Slightly increased from 0.75
-        : availableWidth * 0.88; // Slightly increased from 0.85
-    double maxGridHeight = shouldUseHorizontalLayout
-        ? availableHeight *
-              0.52 // Slightly increased from 0.5
-        : availableHeight * 0.48; // Slightly increased from 0.45
+    // Calculate cell size based on available space and grid dimensions
+    double cellSizeFromWidth = availableWidth / gridWidth;
+    double cellSizeFromHeight = availableHeight / gridHeight;
 
-    // Calculate initial cell size based on available space
-    double cellSizeFromWidth = maxGridWidth / gridWidth;
-    double cellSizeFromHeight = maxGridHeight / gridHeight;
-
-    // Use the smaller of the two to ensure grid fits
+    // Use the smaller of the two to ensure grid fits within allocated area
     double cellSize = min(cellSizeFromWidth, cellSizeFromHeight);
 
-    // Apply balanced cell size limits
-    cellSize = cellSize.clamp(
-      screenWidth * 0.065, // Slightly larger minimum
-      screenWidth * 0.13, // Slightly larger maximum
-    );
+    // Apply minimum and maximum cell size limits for usability
+    double minCellSize = screenWidth * 0.06; // Minimum 6% of screen width
+    double maxCellSize = screenWidth * 0.15; // Maximum 15% of screen width
 
-    // Add balanced spacing between cells
-    double cellSpacing = screenWidth * 0.009; // Slightly more spacing
+    cellSize = cellSize.clamp(minCellSize, maxCellSize);
+
+    // Add spacing between cells (proportional to cell size)
+    double cellSpacing = cellSize * 0.1; // 10% of cell size for spacing
     double totalCellSize = cellSize + cellSpacing;
 
     // Calculate total grid dimensions
     double totalGridWidth = gridWidth * totalCellSize - cellSpacing;
     double totalGridHeight = gridHeight * totalCellSize - cellSpacing;
 
-    // Apply scale factor to ensure grid fits within bounds
+    // Apply scale factor to ensure grid fits within allocated bounds
     double scaleFactor = 1.0;
-    if (totalGridWidth > maxGridWidth || totalGridHeight > maxGridHeight) {
-      double widthScale = maxGridWidth / totalGridWidth;
-      double heightScale = maxGridHeight / totalGridHeight;
+    if (totalGridWidth > availableWidth || totalGridHeight > availableHeight) {
+      double widthScale = availableWidth / totalGridWidth;
+      double heightScale = availableHeight / totalGridHeight;
       scaleFactor = min(widthScale, heightScale);
     }
 
@@ -132,10 +125,10 @@ class WordGrid extends StatelessWidget {
         gridHeight * finalTotalCellSize - finalCellSpacing;
 
     // Create grid with only cells that have letters
-    return Container(
+    return ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: maxGridWidth,
-        maxHeight: maxGridHeight,
+        maxWidth: availableWidth,
+        maxHeight: availableHeight,
       ),
       child: Center(
         child: Container(
@@ -185,16 +178,16 @@ class WordGrid extends StatelessWidget {
                               Colors.grey.shade200,
                             ],
                     ),
-                    borderRadius: BorderRadius.circular(screenWidth * 0.015),
+                    borderRadius: BorderRadius.circular(finalCellSize * 0.15),
                     border: Border.all(
                       color: isPartOfFoundWord
                           ? Colors.green.shade300
                           : Colors.grey.shade300,
-                      width: screenWidth * 0.002,
+                      width: finalCellSize * 0.02,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: Offset(0, 2),
                         spreadRadius: 0.5,
@@ -208,16 +201,16 @@ class WordGrid extends StatelessWidget {
                         color: isPartOfFoundWord
                             ? Colors.white
                             : Colors.black87,
-                        fontSize: (screenWidth * 0.038).clamp(
-                          screenWidth * 0.028,
-                          screenWidth * 0.055,
+                        fontSize: (finalCellSize * 0.6).clamp(
+                          finalCellSize * 0.4,
+                          finalCellSize * 0.8,
                         ),
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.3,
                         shadows: isPartOfFoundWord
                             ? [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   offset: Offset(1, 1),
                                   blurRadius: 1,
                                 ),

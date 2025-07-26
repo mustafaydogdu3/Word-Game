@@ -136,6 +136,257 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
+  void _showLevelNavigationDialog() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    final maxLevels = viewModel.totalLevels;
+
+    // Controller for text input
+    final TextEditingController levelController = TextEditingController();
+    final FocusNode focusNode = FocusNode();
+    int selectedLevel = currentLevel;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
+              ),
+              title: Text(
+                'Test - Seviye Seç',
+                style: TextStyle(
+                  fontSize: isSmallScreen
+                      ? screenWidth * 0.05
+                      : screenWidth * 0.04,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Mevcut seviye: $currentLevel\nToplam seviye: $maxLevels',
+                    style: TextStyle(
+                      fontSize: isSmallScreen
+                          ? screenWidth * 0.04
+                          : screenWidth * 0.035,
+                    ),
+                  ),
+                  SizedBox(height: screenWidth * 0.03),
+
+                  // Number picker
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: selectedLevel > 1
+                            ? () => setState(() => selectedLevel--)
+                            : null,
+                        icon: Icon(Icons.remove_circle_outline),
+                        color: selectedLevel > 1 ? Colors.blue : Colors.grey,
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.04,
+                        ),
+                        child: Text(
+                          '$selectedLevel',
+                          style: TextStyle(
+                            fontSize: isSmallScreen
+                                ? screenWidth * 0.06
+                                : screenWidth * 0.05,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: selectedLevel < maxLevels
+                            ? () => setState(() => selectedLevel++)
+                            : null,
+                        icon: Icon(Icons.add_circle_outline),
+                        color: selectedLevel < maxLevels
+                            ? Colors.blue
+                            : Colors.grey,
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: screenWidth * 0.02),
+
+                  // Text input as alternative
+                  TextField(
+                    controller: levelController,
+                    focusNode: focusNode,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Veya seviye numarası yazın (1-$maxLevels)',
+                      border: OutlineInputBorder(),
+                      hintText: 'Örn: 15',
+                    ),
+                    onChanged: (value) {
+                      final level = int.tryParse(value);
+                      if (level != null && level >= 1 && level <= maxLevels) {
+                        setState(() => selectedLevel = level);
+                      }
+                    },
+                    onSubmitted: (value) {
+                      final level = int.tryParse(value);
+                      if (level != null && level >= 1 && level <= maxLevels) {
+                        Navigator.of(context).pop();
+                        _goToLevel(level);
+                      } else {
+                        // Show error for invalid input
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Lütfen 1 ile $maxLevels arasında bir sayı girin',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  SizedBox(height: screenWidth * 0.02),
+
+                  // Quick level buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildQuickLevelButton(context, 1, '1', Colors.blue),
+                      _buildQuickLevelButton(context, 10, '10', Colors.green),
+                      _buildQuickLevelButton(context, 25, '25', Colors.orange),
+                      _buildQuickLevelButton(
+                        context,
+                        maxLevels,
+                        'Son',
+                        Colors.red,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'İptal',
+                    style: TextStyle(
+                      fontSize: isSmallScreen
+                          ? screenWidth * 0.04
+                          : screenWidth * 0.035,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _goToLevel(selectedLevel);
+                  },
+                  child: Text(
+                    'Git',
+                    style: TextStyle(
+                      fontSize: isSmallScreen
+                          ? screenWidth * 0.04
+                          : screenWidth * 0.035,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickLevelButton(
+    BuildContext context,
+    int level,
+    String label,
+    Color color,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.of(context).pop();
+        _goToLevel(level);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.02,
+          vertical: screenWidth * 0.015,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: isSmallScreen ? screenWidth * 0.035 : screenWidth * 0.03,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  void _goToLevel(int level) async {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
+    try {
+      viewModel.goToLevel(level);
+
+      // Update local state
+      setState(() {
+        currentLevel = level;
+        currentWorld = level;
+        worldName = "YOLCULUK $level";
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Level $level\'e geçildi!',
+            style: TextStyle(
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
+            ),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Level $level\'e geçilemedi: $e',
+            style: TextStyle(
+              fontSize: isSmallScreen
+                  ? screenWidth * 0.04
+                  : screenWidth * 0.035,
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _resetProgress() async {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
@@ -304,6 +555,46 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ),
 
           Spacer(),
+
+          // Test Level Navigation Button (Temporary)
+          GestureDetector(
+            onTap: () async {
+              await SoundService.playButtonClick();
+              _showLevelNavigationDialog();
+            },
+            child: Container(
+              width: isSmallScreen ? screenWidth * 0.12 : screenWidth * 0.08,
+              height: isSmallScreen ? screenWidth * 0.12 : screenWidth * 0.08,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange.shade600, Colors.orange.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.navigation,
+                color: Colors.white,
+                size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
+              ),
+            ),
+          ),
+
+          SizedBox(
+            width: isSmallScreen ? screenWidth * 0.02 : screenWidth * 0.015,
+          ),
 
           // Settings button
           GestureDetector(
